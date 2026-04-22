@@ -11,6 +11,7 @@ describe('HookInstaller', () => {
   beforeEach(async () => {
     testDir = await mkdtemp(join(tmpdir(), 'hooks-'));
     settingsPath = join(testDir, 'settings.json');
+    await writeFile(settingsPath, JSON.stringify({}), 'utf-8');
   });
 
   afterEach(async () => {

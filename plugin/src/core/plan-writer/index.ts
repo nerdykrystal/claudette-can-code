@@ -9,7 +9,7 @@ export type WriteError = { code: 'SCHEMA_INVALID' | 'WRITE_FAIL'; detail: string
 
 export async function write(plan: Plan, outPath: string): Promise<Result<void, WriteError>> {
   // Validate against schema first
-  const ajv = new Ajv();
+  const ajv = new (Ajv as any)({ validateFormats: false });
   const validate = ajv.compile(planSchema);
 
   if (!validate(plan)) {

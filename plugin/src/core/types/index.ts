@@ -28,10 +28,15 @@ export interface Stage {
   skillInvocations: string[];
 }
 
+export interface BundleRef {
+  path: string;
+  sha256: string;
+}
+
 export interface Plan {
   schemaVersion: string;
   id: string;
   createdAt: string;
-  bundle: { prdPath: string; trdPath: string; avdPath: string; tqcdPath: string };
+  bundle: { prd: BundleRef; trd: BundleRef; avd: BundleRef; tqcd: BundleRef };
   stages: Stage[];
 }

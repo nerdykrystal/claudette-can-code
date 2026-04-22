@@ -4,10 +4,10 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Validator } from 'ajv';
+import Ajv from 'ajv';
 import { AuditLogger } from '../../core/audit/index.js';
 
-const ajv = new Validator();
+const ajv = new (Ajv as any)({ validateFormats: false });
 
 const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');
 const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));

@@ -11,9 +11,9 @@ export function check(plan: Plan, catalog: YourSetupCatalog): Result<void, Skill
 
   // Build available set of skills
   const available = new Set<string>();
-  available.add(...catalog.skills);
-  available.add(...catalog.plugins);
-  available.add(...catalog.mcpServers);
+  catalog.skills.forEach((s) => available.add(s));
+  catalog.plugins.forEach((p) => available.add(p));
+  catalog.mcpServers.forEach((m) => available.add(m));
 
   // Check each stage
   for (const stage of plan.stages) {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { fc } from 'fast-check';
+import fc from 'fast-check';
 import { planBackwards, type ExcellenceSpec } from '../../src/core/backwards-planning/index.js';
 
 describe('Backwards-Planning Engine (FR-002)', () => {

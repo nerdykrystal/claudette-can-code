@@ -3,10 +3,10 @@
 
 import { mkdir, open } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Validator } from 'ajv';
+import Ajv from 'ajv';
 import type { Result } from '../types/index.js';
 
-const ajv = new Validator();
+const ajv = new (Ajv as any)({ validateFormats: false });
 
 export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'plan_generated' | 'dry_run' | 'audit_query';
 export type Decision = 'allow' | 'block' | 'halt';

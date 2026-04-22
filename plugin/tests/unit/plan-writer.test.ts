@@ -10,10 +10,10 @@ const createValidPlan = (): Plan => ({
   id: 'test-plan-123',
   createdAt: '2026-04-22T12:00:00Z',
   bundle: {
-    prdPath: '/path/to/prd.md',
-    trdPath: '/path/to/trd.md',
-    avdPath: '/path/to/avd.md',
-    tqcdPath: '/path/to/tqcd.md',
+    prd: { path: '/path/to/prd.md', sha256: 'abc123' },
+    trd: { path: '/path/to/trd.md', sha256: 'abc124' },
+    avd: { path: '/path/to/avd.md', sha256: 'abc125' },
+    tqcd: { path: '/path/to/tqcd.md', sha256: 'abc126' },
   },
   stages: [
     {

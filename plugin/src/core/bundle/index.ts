@@ -67,8 +67,9 @@ function parseFrontmatter(content: string): Record<string, unknown> {
 }
 
 async function readBundleDoc(planningDir: string, kind: BundleDocKind): Promise<Result<BundleDoc, BundleError>> {
-  const pattern = `${planningDir}/${kind}*.md`;
-  const matches = await glob(pattern, { case: false });
+  const normalizedDir = planningDir.replace(/\\/g, '/');
+  const pattern = `${normalizedDir}/${kind}*.md`;
+  const matches = await glob(pattern, { caseSensitiveMatch: false });
 
   if (matches.length === 0) {
     return { ok: false, error: { code: 'MISSING_DOC', detail: `No ${kind} document found`, kind } };

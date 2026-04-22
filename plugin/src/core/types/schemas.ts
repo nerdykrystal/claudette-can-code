@@ -1,11 +1,16 @@
-import planSchemaData from '../../schemas/plan.schema.json' with { type: 'json' };
-import auditEntrySchemaData from '../../schemas/audit-entry.schema.json' with { type: 'json' };
-import deviationManifestSchemaData from '../../schemas/deviation-manifest.schema.json' with { type: 'json' };
-import convergenceGateResultSchemaData from '../../schemas/convergence-gate-result.schema.json' with { type: 'json' };
-import inputManifestSchemaData from '../../schemas/input-manifest.schema.json' with { type: 'json' };
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
-export const planSchema = planSchemaData;
-export const auditEntrySchema = auditEntrySchemaData;
-export const deviationManifestSchema = deviationManifestSchemaData;
-export const convergenceGateResultSchema = convergenceGateResultSchemaData;
-export const inputManifestSchema = inputManifestSchemaData;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const schemasDir = join(__dirname, '../../../schemas');
+
+function load(name: string): Record<string, unknown> {
+  return JSON.parse(readFileSync(join(schemasDir, name), 'utf-8')) as Record<string, unknown>;
+}
+
+export const planSchema = load('plan.schema.json');
+export const auditEntrySchema = load('audit-entry.schema.json');
+export const deviationManifestSchema = load('deviation-manifest.schema.json');
+export const convergenceGateResultSchema = load('convergence-gate-result.schema.json');
+export const inputManifestSchema = load('input-manifest.schema.json');

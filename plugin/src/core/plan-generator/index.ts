@@ -124,16 +124,28 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
     id: planId,
     createdAt,
     bundle: {
-      prdPath: bundle.prd.path,
-      trdPath: bundle.trd.path,
-      avdPath: bundle.avd.path,
-      tqcdPath: bundle.tqcd.path,
+      prd: {
+        path: bundle.prd.path,
+        sha256: sha256(bundle.prd.content),
+      },
+      trd: {
+        path: bundle.trd.path,
+        sha256: sha256(bundle.trd.content),
+      },
+      avd: {
+        path: bundle.avd.path,
+        sha256: sha256(bundle.avd.content),
+      },
+      tqcd: {
+        path: bundle.tqcd.path,
+        sha256: sha256(bundle.tqcd.content),
+      },
     },
     stages: stagesWithDefaults,
   };
 
   // Validate against schema
-  const ajv = new Ajv();
+  const ajv = new (Ajv as any)({ validateFormats: false });
   const validate = ajv.compile(planSchema);
   if (!validate(plan)) {
     return {
