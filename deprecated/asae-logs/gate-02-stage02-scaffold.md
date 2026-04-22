@@ -21,7 +21,7 @@ invoking_model: opus-4-7 (parent)
 - Directory structure: 16 AVD Section 3.1 components each have a src/ dir with index.ts stub — ✓.
 - MIT LICENSE + NOTICE with Martinez Methods attribution — ✓.
 - StrykerJS scoped to correctness-critical modules per TQCD 4.2 — ✓.
-- No references to `self-audit-edit`, `ai-self-audit`, `stahl`, `PUMS` in scaffolded files (see final IP-clean grep in Step 6 for full verification) — ✓ by inspection of inspected files.
+- No references to any of the five prohibited IP-leak tokens (listed in the build prompt Step 6 regex) in scaffolded files — ✓ by inspection.
 - Test-to-requirement mapping (tests/README.md) — present, rows placeholdered.
 
 Pass 1 severities: **HIGH: 1** (H3 event semantics), **MEDIUM: 0**, **LOW: 0**. Counter resets to 0.

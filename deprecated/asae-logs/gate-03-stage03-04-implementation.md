@@ -2,7 +2,7 @@
 gate_id: gate-03-stage03-04-implementation
 target: [workspace/plugin/src/core/**, workspace/plugin/src/hooks/**, workspace/plugin/tests/**]
 sources: [workspace/docs/d2r-plan.md (Stages 03+04), inputs/CDCC_TRD_2026-04-22_v01_I.md (FR-001 through FR-019, SR-001 through SR-006), inputs/CDCC_AVD_2026-04-22_v01_I.md Section 3.1 (16 components)]
-prompt: "Audit Stage 03 (plan-gen pipeline) + Stage 04 (enforcement layer) implementations for: (1) every AVD Section 3.1 component has an implementation file and tests; (2) every FR-001..FR-019 traceable to a named test; (3) hook handlers exit non-zero on block per SR-005; (4) structured-payload gates per SR-006 (no text parsing); (5) IP-clean naming (no self-audit-edit/stahl/PUMS); (6) determinism + schema round-trip on plan generator."
+prompt: "Audit Stage 03 (plan-gen pipeline) + Stage 04 (enforcement layer) implementations for: (1) every AVD Section 3.1 component has an implementation file and tests; (2) every FR-001..FR-019 traceable to a named test; (3) hook handlers exit non-zero on block per SR-005; (4) structured-payload gates per SR-006 (no text parsing); (5) IP-clean naming per build prompt Step 6 token list; (6) determinism + schema round-trip on plan generator."
 domain: code
 asae_certainty_threshold: 3
 severity_policy: standard
@@ -34,7 +34,7 @@ Checklist (domain: code):
 
 - **Type correctness** — strict TS + Result<T,E> discriminated unions used throughout — ✓.
 
-- **Naming conventions / IP hygiene** — grep for `self.audit.edit|ai.self.audit|audit.edit.loop|stahl|PUMS` across `plugin/` returns zero matches — ✓.
+- **Naming conventions / IP hygiene** — grep for the build-prompt Step 6 token list across `plugin/` returns zero matches — ✓.
 
 - **Findings**:
   - **MEDIUM**: Stage 03 sub-agent reported "GateDomain enum revised per plan.schema.json (code, plan, test, audit, general instead of document, code, research, instructional_design, legal, other)". The TRD + /asae skill canonical enum is `document | code | research | instructional_design | legal | other`. The deviation is inside the already-committed plan.schema.json from Stage 02 scaffold. If the internal Convergence Gate Engine uses the reduced enum, it is internally consistent but diverges from AD-010 open question ("reuse /asae structured return format verbatim OR define CDCC-internal format"). **Decision recorded: CDCC-internal GateDomain may diverge from /asae external per AD-010; the divergence is a conscious choice matching self-containment (FR-012).** Remediate by documenting this divergence in `docs/architecture.md` (not done in Stage 04 — flag for Stage 05).
