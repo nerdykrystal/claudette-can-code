@@ -1,0 +1,32 @@
+{
+  "name": "cdcc",
+  "version": "0.1.0",
+  "description": "Non-bypassable D2R plan enforcement for Claude Code",
+  "commands": [
+    {
+      "name": "generate",
+      "description": "Consume a 4-doc D2R bundle and write a Plan artifact with hooks installed",
+      "usage": "cdcc generate <planning-dir>"
+    },
+    {
+      "name": "audit",
+      "description": "Query the append-only audit log",
+      "usage": "cdcc audit [--since=<ISO8601>]"
+    },
+    {
+      "name": "dry-run",
+      "description": "Validate a 4-doc bundle without writing any artifacts or installing hooks",
+      "usage": "cdcc dry-run <planning-dir>"
+    }
+  ],
+  "hooks": {
+    "handlersDir": "dist/hooks/",
+    "entries": [
+      { "id": "H1", "event": "UserPromptSubmit", "handler": "dist/hooks/h1-input-manifest/index.js" },
+      { "id": "H2", "event": "Stop", "handler": "dist/hooks/h2-deviation-manifest/index.js" },
+      { "id": "H3", "event": "PreToolUse", "handler": "dist/hooks/h3-sandbox-hygiene/index.js" },
+      { "id": "H4", "event": "PreToolUse", "handler": "dist/hooks/h4-model-assignment/index.js" },
+      { "id": "H5", "event": "Stop", "handler": "dist/hooks/h5-gate-result/index.js" }
+    ]
+  }
+}

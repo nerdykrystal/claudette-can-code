@@ -1,0 +1,1 @@
+Sub-Agent Redirector — when H4 blocks due to model mismatch, emits a structured JSON redirect directive to stdout consumable by the Claude Code harness to invoke the Agent tool with model=<assignedModel> (AD-009). Mutation-tested. Implemented in Stage 04 (Haiku).

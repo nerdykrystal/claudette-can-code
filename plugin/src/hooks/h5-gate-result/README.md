@@ -1,0 +1,1 @@
+H5 handler — fires on Stop at end of each stage. Requires ConvergenceGateResult.converged === true. If payload absent or not converged, invokes the Convergence Gate Engine, emits block with remediation template, exits non-zero. Runs before H2 (AD-008). Implemented in Stage 04 (Haiku).

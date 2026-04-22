@@ -1,0 +1,1 @@
+H1 handler — fires on UserPromptSubmit. Reads plan inputManifest.expectedPaths and validates ambient filesystem. Exits non-zero with structured diff on any undeclared path. Implemented in Stage 04 (Haiku).

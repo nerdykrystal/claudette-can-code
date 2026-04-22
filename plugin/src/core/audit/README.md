@@ -1,0 +1,1 @@
+Audit Logger — append-only JSON-lines log, fsync on every write, default path .claude/cdcc-audit/YYYY-MM-DD.jsonl. Every entry matches schemas/audit-entry.schema.json. Local-only; zero network calls. Implemented in Stage 04 (Haiku).

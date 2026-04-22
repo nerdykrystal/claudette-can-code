@@ -1,0 +1,1 @@
+Bundle Consumer — reads the four D2R planning documents (PRD, TRD, AVD, TQCD) from a planning directory, parses YAML frontmatter, asserts approval status, and returns a typed Bundle or a tagged error. Implemented in Stage 03 (Haiku).

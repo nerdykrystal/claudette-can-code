@@ -1,0 +1,1 @@
+Your Setup Catalog — reads .claude/settings.json, lists .claude/plugins/, and enumerates declared MCP server entries to produce a YourSetupCatalog used by the Plan Generator and Skill-Gap Checker. Implemented in Stage 03 (Haiku).

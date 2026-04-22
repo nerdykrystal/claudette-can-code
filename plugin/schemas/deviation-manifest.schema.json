@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://martinez.methods/cdcc/schemas/deviation-manifest.schema.json",
+  "title": "DeviationManifest",
+  "description": "Signed record of substitutions detected in a stage, required by H2",
+  "type": "object",
+  "required": ["substitutions"],
+  "additionalProperties": false,
+  "properties": {
+    "substitutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["original", "replacement", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "original": {
+            "type": "string",
+            "description": "The originally declared item (framework, input, skill, etc.)"
+          },
+          "replacement": {
+            "type": "string",
+            "description": "The item actually used in place of the original"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Justification for the substitution"
+          }
+        }
+      }
+    }
+  }
+}

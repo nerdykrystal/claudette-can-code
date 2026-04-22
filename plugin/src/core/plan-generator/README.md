@@ -1,0 +1,1 @@
+Plan Generator — combines the Bundle and YourSetupCatalog, invokes the Backwards-Planning Engine to derive an ordered stage sequence from the declared excellence state, and produces a Plan entity conforming to schemas/plan.schema.json. Implemented in Stage 03 (Haiku).

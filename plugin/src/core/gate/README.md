@@ -1,0 +1,1 @@
+Convergence Gate Engine (internal) — implements the Martinez Methods ASAE methodology gate. Takes a scope object and returns a ConvergenceGateResult with converged status, iteration counter, and findings array. Mutation-tested. Implemented in Stage 04 (Haiku).

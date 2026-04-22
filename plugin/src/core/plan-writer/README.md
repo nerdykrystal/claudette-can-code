@@ -1,0 +1,1 @@
+Plan Artifact Writer — serializes the Plan to JSON, validates against schemas/plan.schema.json before writing, fsync's for durability, and uses atomic write (temp-file + rename). Implemented in Stage 03 (Haiku).

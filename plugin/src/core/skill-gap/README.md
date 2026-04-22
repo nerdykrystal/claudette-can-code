@@ -1,0 +1,1 @@
+Skill-Gap Checker — compares the Plan's declared skillInvocations against the YourSetupCatalog and returns a Result indicating which required skills are absent from the user's environment (FR-018). Mutation-tested. Implemented in Stage 03 (Haiku).

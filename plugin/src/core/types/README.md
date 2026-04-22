@@ -1,0 +1,1 @@
+Shared types — type-only file providing Result<T,E>, AssignedModel, EffortLevel, SpecDepth, SeverityLevel, and other shared TypeScript types used across all core modules and hook handlers. Excluded from coverage thresholds per vitest.config.ts.

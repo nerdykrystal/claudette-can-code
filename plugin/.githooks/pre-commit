@@ -1,0 +1,14 @@
+#!/bin/sh
+# CDCC pre-commit hook — fast path: lint + typecheck + test
+set -e
+
+echo "[cdcc pre-commit] Running lint..."
+npm run lint
+
+echo "[cdcc pre-commit] Running typecheck..."
+npm run typecheck
+
+echo "[cdcc pre-commit] Running tests..."
+npm run test
+
+echo "[cdcc pre-commit] All checks passed."

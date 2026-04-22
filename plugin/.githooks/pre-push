@@ -1,0 +1,8 @@
+#!/bin/sh
+# CDCC pre-push hook — coverage check
+set -e
+
+echo "[cdcc pre-push] Running coverage check..."
+npm run test:coverage
+
+echo "[cdcc pre-push] Coverage check passed."

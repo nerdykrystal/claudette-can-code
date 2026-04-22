@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://martinez.methods/cdcc/schemas/convergence-gate-result.schema.json",
+  "title": "ConvergenceGateResult",
+  "description": "Output of the Convergence Gate Engine (ASAE methodology, Martinez Methods)",
+  "type": "object",
+  "required": ["converged", "counter", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "converged": {
+      "type": "boolean",
+      "description": "True when all findings are resolved and the gate threshold is met"
+    },
+    "counter": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of gate iterations completed"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["severity", "message"],
+        "additionalProperties": false,
+        "properties": {
+          "severity": {
+            "type": "string",
+            "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

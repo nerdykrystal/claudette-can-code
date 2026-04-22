@@ -1,0 +1,1 @@
+Backwards-Planning Engine (internal) — pure function implementing the Martinez Methods backwards-planning-from-excellence methodology. Derives an ordered stage sequence from an excellence specification and constraints. Mutation-tested. Implemented in Stage 03 (Haiku).

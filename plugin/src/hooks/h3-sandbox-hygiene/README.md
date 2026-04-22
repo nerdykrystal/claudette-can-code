@@ -1,0 +1,1 @@
+H3 handler — fires on PreToolUse at session activation. Audits worktree against plan filesystem and network allowlist. Halts or removes disallowed resources per plan config. Implemented in Stage 04 (Haiku).

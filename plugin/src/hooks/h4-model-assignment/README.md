@@ -1,0 +1,1 @@
+H4 handler — fires on PreToolUse for Write/Edit tool calls. Reads current stage assignedModel from plan state. On executing model mismatch, emits Sub-Agent Redirector directive to stdout and exits non-zero. Mutation-tested. Implemented in Stage 04 (Haiku).

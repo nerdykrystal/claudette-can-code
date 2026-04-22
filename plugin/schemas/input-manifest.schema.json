@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://martinez.methods/cdcc/schemas/input-manifest.schema.json",
+  "title": "InputManifest",
+  "description": "Declares expected and disallowed filesystem paths for H1 enforcement",
+  "type": "object",
+  "required": ["expectedPaths", "disallowedPaths"],
+  "additionalProperties": false,
+  "properties": {
+    "expectedPaths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Glob patterns for paths the stage is permitted to read"
+    },
+    "disallowedPaths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Glob patterns for paths explicitly forbidden during this stage"
+    }
+  }
+}

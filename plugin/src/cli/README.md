@@ -1,0 +1,1 @@
+CLI entry — thin wrapper that parses generate, audit, and dry-run subcommands and delegates to core pipeline components. Contains no business logic. Excluded from coverage thresholds per vitest.config.ts. Implemented in Stage 03/04 (Haiku).

@@ -1,0 +1,36 @@
+{
+  "name": "cdcc",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/cli/index.js",
+  "bin": {
+    "cdcc": "dist/cli/index.js"
+  },
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:mutation": "stryker run",
+    "lint": "eslint src tests",
+    "typecheck": "tsc --noEmit",
+    "prepare": "git config core.hooksPath .githooks || true"
+  },
+  "dependencies": {
+    "ajv": "^8.17",
+    "fast-glob": "^3.3"
+  },
+  "devDependencies": {
+    "@stryker-mutator/core": "^8",
+    "@stryker-mutator/vitest-runner": "^8",
+    "@types/node": "^20",
+    "@vitest/coverage-v8": "^1.6",
+    "eslint": "^9",
+    "fast-check": "^3.19",
+    "typescript": "^5.5",
+    "typescript-eslint": "^8",
+    "vitest": "^1.6"
+  }
+}

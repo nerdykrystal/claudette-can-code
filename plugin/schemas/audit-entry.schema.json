@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://martinez.methods/cdcc/schemas/audit-entry.schema.json",
+  "title": "AuditEntry",
+  "description": "Single entry in the CDCC append-only audit log",
+  "type": "object",
+  "required": ["ts", "hookId", "stage", "decision", "rationale", "payload"],
+  "additionalProperties": false,
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of the audit event"
+    },
+    "hookId": {
+      "type": "string",
+      "enum": ["H1", "H2", "H3", "H4", "H5", "plan_generated", "dry_run", "audit_query"]
+    },
+    "stage": {
+      "type": ["string", "null"],
+      "description": "Stage ID the event is associated with, or null for plan-level events"
+    },
+    "decision": {
+      "type": "string",
+      "enum": ["allow", "block", "halt"]
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable explanation of the decision"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Hook-specific data attached to this audit entry"
+    }
+  }
+}

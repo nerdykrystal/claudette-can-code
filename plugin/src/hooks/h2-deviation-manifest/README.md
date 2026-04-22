@@ -1,0 +1,1 @@
+H2 handler — fires on Stop when BUILD_COMPLETE sentinel is detected. Requires a signed DeviationManifest for every detected substitution. Exits non-zero on unsigned substitution. Implemented in Stage 04 (Haiku).

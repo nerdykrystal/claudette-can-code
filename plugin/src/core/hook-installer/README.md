@@ -1,0 +1,1 @@
+Hook Installer — writes H1–H5 hook entries into .claude/settings.json atomically (temp-file + rename), preserves all unrelated keys, and rolls back on partial failure (FR-019). Implemented in Stage 04 (Haiku).
