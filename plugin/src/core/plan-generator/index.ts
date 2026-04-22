@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto';
 import { createHash } from 'node:crypto';
 import Ajv from 'ajv';
 import { Result, Plan, ModelAssignment, EffortLevel, SpecDepth, GateDomain } from '../types/index.js';
@@ -20,7 +19,7 @@ export interface GenerateError {
   gaps?: { stageId: string; missingSkill: string }[];
 }
 
-function extractExcellenceSpec(bundle: Bundle): ExcellenceSpec {
+function extractExcellenceSpec(): ExcellenceSpec {
   // Heuristic: pull excellence end state from TQCD, then AVD section 2.1
   // For MVP, derive from available content
   const excellentEndState =
@@ -55,7 +54,7 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
   const { bundle, catalog, now = () => new Date() } = input;
 
   // Extract excellence spec
-  const spec = extractExcellenceSpec(bundle);
+  const spec = extractExcellenceSpec();
 
   // Plan backwards
   const plannedStages = planBackwards(spec);
@@ -116,7 +115,12 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
   });
 
   // Build plan with bundle references
-  const planId = randomUUID();
+  // Derive plan ID deterministically from bundle content hash (required for FR-006 determinism)
+  const bundleHash = sha256(
+    bundle.prd.content + bundle.trd.content + bundle.avd.content + bundle.tqcd.content
+  );
+  // Use first 36 chars of hash to form a UUID-like string for uniqueness
+  const planId = `${bundleHash.substring(0, 8)}-${bundleHash.substring(8, 12)}-${bundleHash.substring(12, 16)}-${bundleHash.substring(16, 20)}-${bundleHash.substring(20, 32)}`;
   const createdAt = now().toISOString();
 
   const plan: Plan = {

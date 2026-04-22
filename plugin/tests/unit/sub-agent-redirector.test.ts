@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { redirect, emit, type BlockedToolCall, type RedirectDirective } from '../../src/core/sub-agent-redirector/index.js';
+import { redirect, emit, type BlockedToolCall } from '../../src/core/sub-agent-redirector/index.js';
 
 describe('Sub-Agent Redirector', () => {
   it('should produce redirect directive with correct shape', () => {

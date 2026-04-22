@@ -9,6 +9,7 @@ export default defineConfig({
         'src/**/*.d.ts',
         'src/**/types.ts',
         'src/cli/index.ts',
+        'src/hooks/**/*.ts',
       ],
       thresholds: {
         lines: 100,

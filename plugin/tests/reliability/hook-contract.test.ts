@@ -1,8 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { execSync } from 'node:child_process';
-import { mkdir, writeFile, rm } from 'node:fs/promises';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 
 describe('Hook Contract (Reliability)', () => {
   // This test verifies hook contract: payload in via stdin, audit logged, exit code signals decision.

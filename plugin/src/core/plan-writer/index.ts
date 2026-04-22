@@ -30,8 +30,8 @@ export async function write(plan: Plan, outPath: string): Promise<Result<void, W
 
     await writeFile(tmpPath, jsonContent, 'utf-8');
 
-    // Fsync via file handle
-    const handle = await open(tmpPath, 'r');
+    // Fsync via file handle (open in write mode to ensure fsync works)
+    const handle = await open(tmpPath, 'a');
     try {
       await handle.sync();
     } finally {

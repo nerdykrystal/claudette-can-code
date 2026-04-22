@@ -83,7 +83,6 @@ describe('Plan Artifact Writer (FR-006)', () => {
     } as unknown as Plan;
 
     const outPath = join(testDir, 'plan.json');
-    const tmpPath = `${outPath}.tmp`;
 
     const result = await write(invalidPlan, outPath);
 
@@ -93,7 +92,7 @@ describe('Plan Artifact Writer (FR-006)', () => {
     try {
       await readFile(outPath, 'utf-8');
       throw new Error('Final file should not exist');
-    } catch (e) {
+    } catch {
       // Expected
     }
   });

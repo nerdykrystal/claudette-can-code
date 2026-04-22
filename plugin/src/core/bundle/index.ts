@@ -134,9 +134,13 @@ export async function consume(planningDir: string): Promise<Result<Bundle, Bundl
   return {
     ok: true,
     value: {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       prd: docs.PRD!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       trd: docs.TRD!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       avd: docs.AVD!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       tqcd: docs.TQCD!,
     },
   };

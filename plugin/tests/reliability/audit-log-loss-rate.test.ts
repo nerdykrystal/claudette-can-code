@@ -24,7 +24,7 @@ describe('Audit Log Loss Rate (Reliability)', () => {
     for (let i = 0; i < 1000; i++) {
       const entry: AuditLogEntry = {
         ts: new Date(Date.now() + i * 1000).toISOString(),
-        hookId: ['H1', 'H2', 'H3', 'H4', 'H5'][i % 5] as any,
+        hookId: ['H1', 'H2', 'H3', 'H4', 'H5'][i % 5] as unknown as 'H1' | 'H2' | 'H3' | 'H4' | 'H5',
         stage: `stage-${i % 10}`,
         decision: i % 3 === 0 ? 'allow' : i % 3 === 1 ? 'block' : 'halt',
         rationale: `Entry ${i}`,

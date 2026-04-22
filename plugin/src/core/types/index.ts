@@ -7,7 +7,7 @@ export type EffortLevel = 'low' | 'medium' | 'high';
 export type SpecDepth = 'Shallow' | 'Medium' | 'Deep';
 export type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type SeverityPolicy = 'strict' | 'standard';
-export type GateDomain = 'document' | 'code' | 'research' | 'instructional_design' | 'legal' | 'other';
+export type GateDomain = 'code' | 'plan' | 'test' | 'audit' | 'general';
 export type HookDecision = 'allow' | 'block' | 'halt';
 export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'plan_generated' | 'dry_run' | 'audit_query';
 

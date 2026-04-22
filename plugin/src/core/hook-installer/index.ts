@@ -37,14 +37,23 @@ export async function installHooks(
       const content = await readFile(settingsPath, 'utf-8');
       settings = JSON.parse(content);
     } catch (err) {
-      // If file doesn't exist or is not valid JSON, start with {}
-      if (
-        !(
-          err instanceof Error &&
-          ((err as NodeJS.ErrnoException).code === 'ENOENT' || err.message.includes('JSON'))
-        )
-      ) {
-        // Unexpected error
+      // If file doesn't exist, start with {}. If parse fails, return error.
+      if (err instanceof Error) {
+        const fsErr = err as NodeJS.ErrnoException;
+        if (fsErr.code === 'ENOENT') {
+          // File doesn't exist; start with empty settings
+          settings = {};
+        } else if (err.message.includes('JSON')) {
+          // Malformed JSON
+          return {
+            ok: false,
+            error: { code: 'PARSE_FAIL', detail: `Invalid settings.json: ${err.message}` },
+          };
+        } else {
+          // Unexpected error
+          throw err;
+        }
+      } else {
         throw err;
       }
     }
@@ -96,7 +105,7 @@ export async function installHooks(
 
     // Sync to disk
     const { open } = await import('node:fs/promises');
-    const fd = await open(tempPath, 'r');
+    const fd = await open(tempPath, 'a');
     await fd.sync();
     await fd.close();
 
