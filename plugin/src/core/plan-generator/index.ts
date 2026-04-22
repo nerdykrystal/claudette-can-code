@@ -17,7 +17,7 @@ export interface GenerateInput {
 export interface GenerateError {
   code: 'SKILL_GAP' | 'SCHEMA_INVALID';
   detail: string;
-  gaps?: Array<{ stageId: string; missingSkill: string }>;
+  gaps?: { stageId: string; missingSkill: string }[];
 }
 
 function extractExcellenceSpec(bundle: Bundle): ExcellenceSpec {
@@ -145,6 +145,7 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
   };
 
   // Validate against schema
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ajv = new (Ajv as any)({ validateFormats: false });
   const validate = ajv.compile(planSchema);
   if (!validate(plan)) {

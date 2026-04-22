@@ -2,11 +2,11 @@
 // Stop hook (BUILD_COMPLETE sentinel): requires signed DeviationManifest for detected substitution.
 // Exit 0 (allow) or 1 (block).
 
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import Ajv from 'ajv';
 import { AuditLogger } from '../../core/audit/index.js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ajv = new (Ajv as any)({ validateFormats: false });
 
 const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');

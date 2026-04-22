@@ -2,11 +2,11 @@
 // Stop per-stage: requires ConvergenceGateResult with converged: true.
 // If absent or not converged: block and emit findings. Exit 0 (allow) or 1 (block).
 
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import Ajv from 'ajv';
 import { AuditLogger } from '../../core/audit/index.js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ajv = new (Ajv as any)({ validateFormats: false });
 
 const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');
@@ -82,7 +82,7 @@ export async function handle(): Promise<void> {
       process.exit(1);
     }
 
-    const result = gateResult as { converged: boolean; findings: Array<{ severity: string; message: string }> };
+    const result = gateResult as { converged: boolean; findings: { severity: string; message: string }[] };
 
     // Check convergence
     if (result.converged) {

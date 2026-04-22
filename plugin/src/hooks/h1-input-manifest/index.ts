@@ -11,7 +11,7 @@ const planStatePath = join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json');
 const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));
 
 interface PlanState {
-  stages: Array<{ id: string; inputManifest: string[] }>;
+  stages: { id: string; inputManifest: string[] }[];
 }
 
 /**

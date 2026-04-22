@@ -15,7 +15,7 @@ const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));
 
 interface PlanState {
   currentStageId?: string;
-  stages: Array<{ id: string; assignedModel: ModelAssignment }>;
+  stages: { id: string; assignedModel: ModelAssignment }[];
 }
 
 /**

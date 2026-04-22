@@ -13,7 +13,7 @@ export interface HookEntry {
   matcher?: Record<string, unknown>;
 }
 
-export type InstallError = { code: 'READ_FAIL' | 'WRITE_FAIL' | 'PARSE_FAIL'; detail: string };
+export interface InstallError { code: 'READ_FAIL' | 'WRITE_FAIL' | 'PARSE_FAIL'; detail: string }
 
 /**
  * Install hooks into settings.json.

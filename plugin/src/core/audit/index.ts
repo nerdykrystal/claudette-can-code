@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import Ajv from 'ajv';
 import type { Result } from '../types/index.js';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ajv = new (Ajv as any)({ validateFormats: false });
 
 export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'plan_generated' | 'dry_run' | 'audit_query';
@@ -20,7 +21,7 @@ export interface AuditLogEntry {
   payload: Record<string, unknown>;
 }
 
-export type AuditError = { code: 'WRITE_FAIL' | 'SCHEMA_INVALID'; detail: string };
+export interface AuditError { code: 'WRITE_FAIL' | 'SCHEMA_INVALID'; detail: string }
 
 // JSON Schema for validation (embedded inline per stage depth requirement).
 const auditEntrySchema = {

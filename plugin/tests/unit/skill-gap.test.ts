@@ -3,7 +3,7 @@ import { check } from '../../src/core/skill-gap/index.js';
 import type { Plan, GateSpec } from '../../src/core/types/index.js';
 import type { YourSetupCatalog } from '../../src/core/catalog/index.js';
 
-const createMockPlan = (stages: Array<{ id: string; skillInvocations: string[] }>): Plan => ({
+const createMockPlan = (stages: { id: string; skillInvocations: string[] }[]): Plan => ({
   schemaVersion: '0.1.0',
   id: 'test-plan',
   createdAt: '2026-04-22T00:00:00Z',
