@@ -16,6 +16,6 @@ Per D2R specification, each stage is routed to a specific model via the Agent to
 | 2026-04-22 | 01b | opus-4-7 | Spec-depth: full plan → Opus judge | — | — | Full plan content (this d2r-plan.md) |
 | 2026-04-22 | 02 | sonnet-4-6 | Spec-depth: medium scaffold → Sonnet transcriber | — | — | Project scaffold (plugin.json, package.json, tsconfig, vitest.config, hook stubs, directory structure, README, LICENSE) |
 | 2026-04-22 | 03 | haiku-4-5 (sub-agent) | Agent tool model=haiku | 13:47 | 14:22 | Stage 03 plan-generation pipeline implemented: Bundle Consumer, Catalog, Backwards-Planning Engine, Plan Generator, Plan Writer, Skill-Gap Checker |
-| — | 04 | haiku-4-5 (sub-agent) | Agent tool model=haiku | — | — | Stage 04 enforcement layer (Hook Installer, Audit Logger, Gate Engine, H1–H5 handlers, Sub-Agent Redirector) — parallel with Stage 03 |
+| 2026-04-22 | 04 | haiku-4-5 (sub-agent) | Agent tool model=haiku | 18:06 | 18:45 | Stage 04 enforcement layer (Audit Logger, Gate Engine, Sub-Agent Redirector, Hook Installer, H1–H5 handlers, CLI audit wiring, tests) — parallel with Stage 03 |
 | — | 05 | haiku-4-5 (sub-agent) | Agent tool model=haiku | — | — | Stage 05 reliability tests (crash recovery, hook-miss rate, audit-loss, corruption, stress/fault injection) + CI/pre-commit |
 | — | QA | opus-4-7 (judge) + sonnet-4-6 (remediate) + haiku-4-5 (transcribe) | Testing Taxonomy sweep → Opus judge, Sonnet remediate, Haiku transcribe | — | — | Convergence loop across all deliverables (code coverage, mutation score, schema validation, security audit) |
