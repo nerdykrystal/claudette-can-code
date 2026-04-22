@@ -1,5 +1,35 @@
-// Stage 03 (Haiku) will implement per d2r-plan.md Stage 03 section.
-export type SkillGap = { missingSkill: string; requiredByStage: string };
-export function check(_plan: unknown, _catalog: unknown): { ok: false; error: { code: 'NOT_IMPLEMENTED'; detail: string } } {
-  return { ok: false, error: { code: 'NOT_IMPLEMENTED', detail: 'Stage 03 deliverable' } };
+import { Result, Plan } from '../types/index.js';
+import type { YourSetupCatalog } from '../catalog/index.js';
+
+export interface SkillGap {
+  stageId: string;
+  missingSkill: string;
+}
+
+export function check(plan: Plan, catalog: YourSetupCatalog): Result<void, SkillGap[]> {
+  const gaps: SkillGap[] = [];
+
+  // Build available set of skills
+  const available = new Set<string>();
+  available.add(...catalog.skills);
+  available.add(...catalog.plugins);
+  available.add(...catalog.mcpServers);
+
+  // Check each stage
+  for (const stage of plan.stages) {
+    for (const skillInvocation of stage.skillInvocations) {
+      if (!available.has(skillInvocation)) {
+        gaps.push({
+          stageId: stage.id,
+          missingSkill: skillInvocation,
+        });
+      }
+    }
+  }
+
+  if (gaps.length > 0) {
+    return { ok: false, error: gaps };
+  }
+
+  return { ok: true, value: undefined };
 }
