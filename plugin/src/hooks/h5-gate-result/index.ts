@@ -5,12 +5,10 @@
 import { join } from 'node:path';
 import Ajv from 'ajv';
 import { AuditLogger } from '../../core/audit/index.js';
+import type { AuditLogEntry } from '../../core/audit/index.js';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ajv = new (Ajv as any)({ validateFormats: false });
-
-const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');
-const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));
 
 const convergenceGateResultSchema = {
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -35,66 +33,78 @@ const convergenceGateResultSchema = {
 
 const validateGateResult = ajv.compile(convergenceGateResultSchema);
 
+export interface HandleDeps {
+  stdinReader: () => Promise<string>;
+  auditLogger: AuditLogger;
+  exit: (code: number) => never;
+  stderrWrite: (msg: string) => void;
+}
+
+export interface HandleResult {
+  exitCode: number;
+  audit: AuditLogEntry;
+}
+
 /**
  * H5 handler: read stdin for ConvergenceGateResult.
  * If converged: allow (exit 0).
  * If not converged or schema invalid: block, emit findings (exit 1).
  */
-export async function handle(): Promise<void> {
+export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
   const ts = new Date().toISOString();
 
   try {
     // Read stdin
-    let payload = '';
-    for await (const chunk of process.stdin) {
-      payload += chunk.toString();
-    }
+    const payload = await deps.stdinReader();
 
     // Try to parse as convergenceGateResult
     let gateResult: unknown;
     try {
       gateResult = JSON.parse(payload);
     } catch {
-      await auditLogger.log({
+      const audit: AuditLogEntry = {
         ts,
         hookId: 'H5',
         stage: null,
         decision: 'block',
         rationale: 'Could not parse ConvergenceGateResult from stdin',
         payload: { rawPayload: payload.slice(0, 200) },
-      });
-      console.error('H5 BLOCK: Could not parse gate result');
-      process.exit(1);
+      };
+      await deps.auditLogger.log(audit);
+      deps.stderrWrite('H5 BLOCK: Could not parse gate result');
+      return { exitCode: 1, audit };
     }
 
     // Validate schema
     const valid = validateGateResult(gateResult);
     if (!valid) {
-      await auditLogger.log({
+      const audit: AuditLogEntry = {
         ts,
         hookId: 'H5',
         stage: null,
         decision: 'block',
         rationale: `ConvergenceGateResult schema invalid: ${ajv.errorsText(validateGateResult.errors)}`,
         payload: { gateResult },
-      });
-      console.error('H5 BLOCK: Gate result schema invalid');
-      process.exit(1);
+      };
+      await deps.auditLogger.log(audit);
+      deps.stderrWrite('H5 BLOCK: Gate result schema invalid');
+      return { exitCode: 1, audit };
     }
 
     const result = gateResult as { converged: boolean; findings: { severity: string; message: string }[] };
 
     // Check convergence
     if (result.converged) {
-      await auditLogger.log({
+      const audit: AuditLogEntry = {
         ts,
         hookId: 'H5',
         stage: null,
         decision: 'allow',
         rationale: 'Stage converged per Convergence Gate Engine',
         payload: { gateResult: result },
-      });
-      process.exit(0);
+      };
+      await deps.auditLogger.log(audit);
+      return { exitCode: 0, audit };
     }
 
     // Not converged: emit findings and block
@@ -102,35 +112,61 @@ export async function handle(): Promise<void> {
       .map((f) => `[${f.severity}] ${f.message}`)
       .join('\n');
 
-    console.error(`H5 BLOCK: Stage not converged. Findings:\n${findingsSummary}`);
+    deps.stderrWrite(`H5 BLOCK: Stage not converged. Findings:\n${findingsSummary}`);
 
-    await auditLogger.log({
+    const audit: AuditLogEntry = {
       ts,
       hookId: 'H5',
       stage: null,
       decision: 'block',
       rationale: 'Stage not converged; findings must be remediated',
       payload: { gateResult: result, findingsSummary },
-    });
+    };
+    await deps.auditLogger.log(audit);
 
-    process.exit(1);
+    return { exitCode: 1, audit };
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    await auditLogger.log({
+    const audit: AuditLogEntry = {
       ts,
       hookId: 'H5',
       stage: null,
       decision: 'halt',
       rationale: `H5 handler error: ${detail}`,
       payload: { error: detail },
-    });
-    console.error(`H5 HALT: ${detail}`);
-    process.exit(1);
+    };
+    await deps.auditLogger.log(audit);
+    deps.stderrWrite(`H5 HALT: ${detail}`);
+    return { exitCode: 1, audit };
   }
 }
 
+// Default exported function for CLI entry point
+export async function handle(): Promise<void> {
+  const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');
+  const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));
+
+  const result = await handleImpl({
+    stdinReader: async () => {
+      let payload = '';
+      for await (const chunk of process.stdin) {
+        payload += chunk.toString();
+      }
+      return payload;
+    },
+    auditLogger,
+    exit: process.exit,
+    stderrWrite: (msg) => console.error(msg),
+  });
+
+  process.exit(result.exitCode);
+}
+
 // Entry point
-handle().catch((err) => {
-  console.error('H5 uncaught error:', err);
-  process.exit(1);
-});
+// istanbul ignore next — CLI entry point only executed when module is invoked directly as script; tested via handle() integration tests
+if (import.meta.url === `file://${process.argv[1]}`) {
+  handle().catch((err) => {
+    console.error('H5 uncaught error:', err);
+    process.exit(1);
+  });
+}

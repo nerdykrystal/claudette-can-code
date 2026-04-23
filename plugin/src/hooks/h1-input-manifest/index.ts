@@ -5,13 +5,23 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AuditLogger } from '../../core/audit/index.js';
-
-const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');
-const planStatePath = join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json');
-const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));
+import type { AuditLogEntry } from '../../core/audit/index.js';
 
 interface PlanState {
   stages: { id: string; inputManifest: string[] }[];
+}
+
+export interface HandleDeps {
+  readFile: (path: string, encoding?: string) => Promise<string>;
+  auditLogger: AuditLogger;
+  exit: (code: number) => never;
+  stderrWrite: (msg: string) => void;
+  planStatePath: string;
+}
+
+export interface HandleResult {
+  exitCode: number;
+  audit: AuditLogEntry;
 }
 
 /**
@@ -19,55 +29,83 @@ interface PlanState {
  * Compare to ambient file set (minimal MVP: just log the manifest as-is).
  * On mismatch: block (exit 1). Else allow (exit 0).
  */
-export async function handle(): Promise<void> {
+export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
   const ts = new Date().toISOString();
 
   try {
-    const planContent = await readFile(planStatePath, 'utf-8');
+    const planContent = await deps.readFile(deps.planStatePath, 'utf-8');
     const plan = JSON.parse(planContent) as PlanState;
 
     // Minimal MVP: just validate manifest exists and is non-empty
     const hasManifest = plan.stages && plan.stages.some((s) => s.inputManifest?.length > 0);
 
     if (hasManifest) {
-      await auditLogger.log({
+      const audit: AuditLogEntry = {
         ts,
         hookId: 'H1',
         stage: plan.stages?.[0]?.id ?? null,
         decision: 'allow',
         rationale: 'Input manifest found and non-empty',
         payload: { manifestCount: plan.stages?.length ?? 0 },
-      });
-      process.exit(0);
+      };
+      await deps.auditLogger.log(audit);
+      return { exitCode: 0, audit };
     } else {
-      await auditLogger.log({
+      const audit: AuditLogEntry = {
         ts,
         hookId: 'H1',
         stage: null,
         decision: 'block',
         rationale: 'No input manifest declared in plan',
         payload: { plan: plan.stages ?? [] },
-      });
-      console.error('H1 BLOCK: No input manifest in plan state');
-      process.exit(1);
+      };
+      await deps.auditLogger.log(audit);
+      deps.stderrWrite('H1 BLOCK: No input manifest in plan state');
+      return { exitCode: 1, audit };
     }
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
-    await auditLogger.log({
+    const audit: AuditLogEntry = {
       ts,
       hookId: 'H1',
       stage: null,
       decision: 'halt',
       rationale: `H1 handler error: ${detail}`,
       payload: { error: detail },
-    });
-    console.error(`H1 HALT: ${detail}`);
-    process.exit(1);
+    };
+    await deps.auditLogger.log(audit);
+    deps.stderrWrite(`H1 HALT: ${detail}`);
+    return { exitCode: 1, audit };
   }
 }
 
+// Default exported function for CLI entry point
+export async function handle(): Promise<void> {
+  const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');
+  const planStatePath = join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json');
+  const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));
+
+  const readFileWrapper: (path: string, encoding?: string) => Promise<string> = async (path, encoding) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return readFile(path, (encoding || 'utf-8') as any) as any;
+  };
+
+  const result = await handleImpl({
+    readFile: readFileWrapper,
+    auditLogger,
+    exit: process.exit,
+    stderrWrite: (msg) => console.error(msg),
+    planStatePath,
+  });
+
+  process.exit(result.exitCode);
+}
+
 // Entry point
-handle().catch((err) => {
-  console.error('H1 uncaught error:', err);
-  process.exit(1);
-});
+// istanbul ignore next — CLI entry point only executed when module is invoked directly as script; tested via handle() integration tests
+if (import.meta.url === `file://${process.argv[1]}`) {
+  handle().catch((err) => {
+    console.error('H1 uncaught error:', err);
+    process.exit(1);
+  });
+}

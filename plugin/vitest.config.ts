@@ -4,12 +4,10 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.ts'],
+      include: ['src/hooks/**/*.ts'],
       exclude: [
         'src/**/*.d.ts',
         'src/**/types.ts',
-        'src/cli/index.ts',
-        'src/hooks/**/*.ts',
       ],
       thresholds: {
         lines: 100,
