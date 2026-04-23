@@ -14,6 +14,8 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:mutation": "stryker run",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "test:all": "npm test && npm run test:e2e",
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit",
     "prepare": "git config core.hooksPath .githooks || true"
