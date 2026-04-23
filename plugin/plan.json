@@ -1,0 +1,151 @@
+{
+  "schemaVersion": "0.1.0",
+  "id": "78091529-f3df-95b6-287d-7849c59d82a9",
+  "createdAt": "2026-04-23T02:14:53.182Z",
+  "bundle": {
+    "prd": {
+      "path": "C:/Users/NerdyKrystal/_grand_repo/.claude/worktrees/recursing-cerf-237d75/workspace/plugin/examples/hello-world-planning/PRD_2026-04-22_v01_I.md",
+      "sha256": "2e26255f966f5dd110eea9eeecc11fe3df5056ccb9b0c7115694f1e1d1b07d89"
+    },
+    "trd": {
+      "path": "C:/Users/NerdyKrystal/_grand_repo/.claude/worktrees/recursing-cerf-237d75/workspace/plugin/examples/hello-world-planning/TRD_2026-04-22_v01_I.md",
+      "sha256": "5f5b57778df53508a2bbeb1fb17b4d81e844ede553efd13924f3c4a8d332de79"
+    },
+    "avd": {
+      "path": "C:/Users/NerdyKrystal/_grand_repo/.claude/worktrees/recursing-cerf-237d75/workspace/plugin/examples/hello-world-planning/AVD_2026-04-22_v01_I.md",
+      "sha256": "9116bc03b2768cfe101dad21fab15bae4cabec93a1de6d3f096c5356878e83b7"
+    },
+    "tqcd": {
+      "path": "C:/Users/NerdyKrystal/_grand_repo/.claude/worktrees/recursing-cerf-237d75/workspace/plugin/examples/hello-world-planning/TQCD_2026-04-22_v01_I.md",
+      "sha256": "efe031a27e5e6c2c650f8e553e6e18f41ab66dfe883b6d58764d37238b5e9eac"
+    }
+  },
+  "stages": [
+    {
+      "id": "plan-skeleton",
+      "name": "Plan Skeleton",
+      "assignedModel": "opus-4-7",
+      "effortLevel": "low",
+      "specDepth": "Shallow",
+      "gate": {
+        "threshold": 2,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "plan-full",
+      "name": "Full Plan Content",
+      "assignedModel": "opus-4-7",
+      "effortLevel": "medium",
+      "specDepth": "Medium",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "scaffold",
+      "name": "Project Scaffold",
+      "assignedModel": "sonnet-4-6",
+      "effortLevel": "medium",
+      "specDepth": "Medium",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-0",
+      "name": "Implementation Stage 0",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-1",
+      "name": "Implementation Stage 1",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-2",
+      "name": "Implementation Stage 2",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-3",
+      "name": "Implementation Stage 3",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-4",
+      "name": "Implementation Stage 4",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "qa",
+      "name": "Quality Assurance",
+      "assignedModel": "opus-4-7",
+      "effortLevel": "high",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 5,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    }
+  ]
+}
