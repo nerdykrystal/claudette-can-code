@@ -152,7 +152,6 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const ajv = new (Ajv as any)({ validateFormats: false });
   const validate = ajv.compile(planSchema);
-  // istanbul ignore next — Plan construction guarantees schema validity; unreachable with well-formed input
   if (!validate(plan)) {
     return {
       ok: false,
@@ -165,7 +164,6 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
 
   // Check skill gaps
   const gapResult = check(plan, catalog);
-  // istanbul ignore next — Skill gaps unreachable if input catalog is consistent with generated plan
   if (!gapResult.ok) {
     return {
       ok: false,
