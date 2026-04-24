@@ -296,4 +296,69 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
     expect(result.exitCode).toBe(0);
     expect(result.audit.stage).toBe('first-stage');
   });
+
+  it('error handling on outer exception with audit log and stderr (lines 145-147)', async () => {
+    const deps: HandleDeps = {
+      readFile: async () => {
+        throw new Error('readFile failed');
+      },
+      stdinReader: async () => JSON.stringify({
+        tool: 'Write',
+        executingModel: 'model-a',
+      }),
+      auditLogger: mockAuditLogger,
+      emit: () => {
+        // Mock
+      },
+      exit: () => {
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+      planStatePath: '/fake/plan-state.json',
+    };
+
+    const result = await handleImpl(deps);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.audit.decision).toBe('halt');
+    expect(stderrOutput.length).toBeGreaterThan(0);
+    expect(stderrOutput[0]).toContain('H4 HALT:');
+  });
+
+  it('handle missing executingModel field in payload (lines 171-175)', async () => {
+    const deps: HandleDeps = {
+      readFile: async () => JSON.stringify({
+        currentStageId: 'stage-1',
+        stages: [{ id: 'stage-1', assignedModel: 'model-a' }],
+      }),
+      stdinReader: async () => JSON.stringify({
+        tool: 'Write',
+        // executingModel is missing, so it will be undefined
+      }),
+      auditLogger: mockAuditLogger,
+      emit: (directive) => {
+        emitCalled = true;
+        _emittedDirective = directive;
+      },
+      exit: () => {
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+      planStatePath: '/fake/plan-state.json',
+    };
+
+    const result = await handleImpl(deps);
+
+    // When executingModel is undefined, the comparison at line 89 fails (undefined !== 'model-a')
+    // This triggers the mismatch block at lines 102-121
+    // Line 106 uses the ?? operator to set 'unknown' in the blocked object,
+    // but line 118 puts the original executingModel (undefined) in the audit payload
+    expect(result.exitCode).toBe(1);
+    expect(result.audit.decision).toBe('block');
+    expect(emitCalled).toBe(true);
+    // The audit payload uses the original executingModel variable (line 118), which is undefined
+    expect(result.audit.payload.executingModel).toBeUndefined();
+    // But the blocked object passed to redirect() uses 'unknown' (line 106)
+    expect(result.audit.payload.directive).toBeDefined();
+  });
 });

@@ -319,4 +319,34 @@ describe('H5 Gate Result Hook (FR-011)', () => {
     expect(findingsSummary).toContain('[CRITICAL]');
     expect(findingsSummary).toContain('[LOW]');
   });
+
+  it('error handling: audit logged and stderr written on exception (lines 168-172)', async () => {
+    let auditLogged = false;
+    let auditDetail = '';
+
+    const deps: HandleDeps = {
+      stdinReader: async () => {
+        throw new Error('Socket closed prematurely');
+      },
+      auditLogger: {
+        log: async (entry) => {
+          auditLogged = true;
+          auditDetail = entry.rationale;
+        },
+      } as unknown as AuditLogger,
+      exit: () => {
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+    };
+
+    const result = await handleImpl(deps);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.audit.decision).toBe('halt');
+    expect(auditLogged).toBe(true);
+    expect(auditDetail).toContain('H5 handler error');
+    expect(stderrOutput.length).toBeGreaterThan(0);
+    expect(stderrOutput[0]).toContain('H5 HALT:');
+  });
 });

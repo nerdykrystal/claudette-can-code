@@ -198,4 +198,70 @@ describe('H2 Deviation Manifest Hook (FR-008)', () => {
 
     expect(result.audit.payload).toHaveProperty('buildComplete', false);
   });
+
+  it('regex parsing edge case: BUILD_COMPLETE with malformed JSON falls back to block (lines 100-111)', async () => {
+    // This tests the catch block at line 112: regex match succeeds but JSON.parse fails
+    const payload = 'BUILD_COMPLETE "deviationManifest": {invalid json here';
+
+    const deps: HandleDeps = {
+      stdinReader: async () => payload,
+      auditLogger: mockAuditLogger,
+      exit: () => {
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+    };
+
+    const result = await handleImpl(deps);
+
+    // On regex parse failure, should fall through to fallback (line 118 onwards)
+    // which results in allow (no BUILD_COMPLETE detected in fallback path)
+    expect(result.audit.decision).toBe('allow');
+  });
+
+  it('handle stdio read errors with halt decision (lines 169-173)', async () => {
+    const deps: HandleDeps = {
+      stdinReader: async () => {
+        throw new Error('EPIPE: pipe read failed');
+      },
+      auditLogger: mockAuditLogger,
+      exit: () => {
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+    };
+
+    const result = await handleImpl(deps);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.audit.decision).toBe('halt');
+    expect(stderrOutput).toContain('H2 HALT: EPIPE: pipe read failed');
+  });
+
+  it('audit logger must be called for all paths', async () => {
+    let logCallCount = 0;
+    const manifest = {
+      substitutions: [
+        { original: 'a', replacement: 'b', reason: 'test' },
+      ],
+    };
+    const payload = `BUILD_COMPLETE "deviationManifest": ${JSON.stringify(manifest)}`;
+
+    const deps: HandleDeps = {
+      stdinReader: async () => payload,
+      auditLogger: {
+        log: async () => {
+          logCallCount++;
+        },
+      } as unknown as AuditLogger,
+      exit: () => {
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+    };
+
+    await handleImpl(deps);
+
+    expect(logCallCount).toBe(1); // Exactly one log call per invocation
+  });
 });

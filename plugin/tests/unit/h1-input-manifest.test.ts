@@ -192,4 +192,63 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     expect(result.audit.stage).toBe('my-stage');
   });
+
+  it('handle empty stages array gracefully (lines 107-111)', async () => {
+    const deps: HandleDeps = {
+      readFile: async () => JSON.stringify({
+        stages: [],
+      }),
+      auditLogger: mockAuditLogger,
+      exit: (code) => {
+        exitCodeCaptured = code;
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+      planStatePath: '/fake/plan-state.json',
+    };
+
+    const result = await handleImpl(deps);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.audit.decision).toBe('block');
+    expect(result.audit.rationale).toBe('No input manifest declared in plan');
+  });
+
+  it('handle plan state with null stages property', async () => {
+    const deps: HandleDeps = {
+      readFile: async () => JSON.stringify({
+        stages: null,
+      }),
+      auditLogger: mockAuditLogger,
+      exit: (code) => {
+        exitCodeCaptured = code;
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+      planStatePath: '/fake/plan-state.json',
+    };
+
+    const result = await handleImpl(deps);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.audit.decision).toBe('block');
+  });
+
+  it('handle plan state with undefined stages property', async () => {
+    const deps: HandleDeps = {
+      readFile: async () => JSON.stringify({}),
+      auditLogger: mockAuditLogger,
+      exit: (code) => {
+        exitCodeCaptured = code;
+        throw new Error('exit');
+      },
+      stderrWrite: (msg) => stderrOutput.push(msg),
+      planStatePath: '/fake/plan-state.json',
+    };
+
+    const result = await handleImpl(deps);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.audit.decision).toBe('block');
+  });
 });
