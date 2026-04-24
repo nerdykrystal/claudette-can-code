@@ -4,6 +4,7 @@
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { AuditLogger } from '../../core/audit/index.js';
 import type { AuditLogEntry } from '../../core/audit/index.js';
 
@@ -124,7 +125,7 @@ export async function handle(): Promise<void> {
 
 // Entry point
 // istanbul ignore next — CLI entry point only executed when module is invoked directly as script; tested via handle() integration tests
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   handle().catch((err) => {
     console.error('H3 uncaught error:', err);
     process.exit(1);

@@ -5,6 +5,7 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { AuditLogger } from '../../core/audit/index.js';
 import { redirect, emit } from '../../core/sub-agent-redirector/index.js';
 import type { ModelAssignment } from '../../core/types/index.js';
@@ -167,7 +168,7 @@ export async function handle(): Promise<void> {
 
 // Entry point
 // istanbul ignore next — CLI entry point only executed when module is invoked directly as script; tested via handle() integration tests
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   handle().catch((err) => {
     console.error('H4 uncaught error:', err);
     process.exit(1);
