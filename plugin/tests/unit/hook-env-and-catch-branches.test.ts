@@ -106,7 +106,6 @@ describe('handleImpl outer-catch String(err) non-Error branch', () => {
         if (calls.count === 1) {
           // Non-Error thrown: handleImpl outer catch classifies as `String(err)`.
           // This is deliberately a string rather than an Error instance.
-          // eslint-disable-next-line @typescript-eslint/only-throw-error
           throw 'non-error-thrown-value';
         }
         return { ok: true as const, value: undefined };
