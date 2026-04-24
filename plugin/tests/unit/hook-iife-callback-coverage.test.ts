@@ -56,10 +56,14 @@ interface ExitStub {
 function stubExit(): ExitStub {
   const original = process.exit;
   const calls: number[] = [];
+  // Do NOT throw from the stub. The IIFE .catch callback runs inside a detached
+  // microtask at module top-level eval time; a throw here becomes an unhandled
+  // rejection that Stryker's dry-run classifier treats as an error outside a test.
+  // We only need to observe that exit was called — which the `calls` array does.
   process.exit = ((code?: number): never => {
     calls.push(code ?? 0);
-    // Throw to short-circuit further side effects, but let the caller catch.
-    throw new Error(`__test_exit_stub__:${String(code)}`);
+    // Return undefined via type-cast; callers never use the return value.
+    return undefined as never;
   }) as typeof process.exit;
   return { calls, restore: () => { process.exit = original; } };
 }
