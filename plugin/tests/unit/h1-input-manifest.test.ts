@@ -38,7 +38,7 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
   });
 
   it('block when no input manifest declared', async () => {
-    let stderrCalls: string[] = [];
+    const stderrCalls: string[] = [];
     const deps: HandleDeps = {
       readFile: async () => JSON.stringify({
         stages: [{ id: 'stage-1' }],
