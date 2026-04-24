@@ -6,6 +6,11 @@ export default tseslint.config(
   {
     rules: {
       complexity: ['error', 15],
+      // Accept underscore-prefixed unused vars as intentional (standard convention).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
     },
   },
 );

@@ -4,14 +4,16 @@ import { AuditLogger } from '../../src/core/audit/index.js';
 
 describe('H1 Input Manifest Hook (FR-007)', () => {
   let mockAuditLogger: AuditLogger;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let exitCodeCaptured: number | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let stderrOutput: string[] = [];
 
   beforeEach(() => {
     exitCodeCaptured = null;
     stderrOutput = [];
     mockAuditLogger = {
-      log: async (entry) => {
+      log: async (_entry) => {
         // Mock implementation
       },
     } as unknown as AuditLogger;

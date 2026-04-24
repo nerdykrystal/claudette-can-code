@@ -6,12 +6,12 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
   let stderrOutput: string[] = [];
   let mockAuditLogger: AuditLogger;
   let emitCalled = false;
-  let emittedDirective: unknown = null;
+  let _emittedDirective: unknown = null;
 
   beforeEach(() => {
     stderrOutput = [];
     emitCalled = false;
-    emittedDirective = null;
+    _emittedDirective = null;
     mockAuditLogger = {
       log: async () => {
         // Mock
@@ -26,7 +26,7 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
       auditLogger: mockAuditLogger,
       emit: (directive) => {
         emitCalled = true;
-        emittedDirective = directive;
+        _emittedDirective = directive;
       },
       exit: () => {
         throw new Error('exit');
@@ -56,7 +56,7 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
       auditLogger: mockAuditLogger,
       emit: (directive) => {
         emitCalled = true;
-        emittedDirective = directive;
+        _emittedDirective = directive;
       },
       exit: () => {
         throw new Error('exit');
@@ -86,7 +86,7 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
       auditLogger: mockAuditLogger,
       emit: (directive) => {
         emitCalled = true;
-        emittedDirective = directive;
+        _emittedDirective = directive;
       },
       exit: () => {
         throw new Error('exit');
@@ -115,6 +115,7 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
       auditLogger: mockAuditLogger,
       emit: (directive) => {
         emitCalled = true;
+        _emittedDirective = directive;
       },
       exit: () => {
         throw new Error('exit');

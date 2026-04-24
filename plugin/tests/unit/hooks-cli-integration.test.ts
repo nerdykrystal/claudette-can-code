@@ -1,3 +1,9 @@
+// Integration-test scope: each hook handler dynamically inspects its module's
+// exported surface at test time. Narrowing to specific types per hook would
+// require mirroring every hook module's private type in this test file, which
+// would couple the integration tests to internal types. `any` is used only at
+// test-driver-layer call sites, never inside hook implementation code.
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtemp, rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';

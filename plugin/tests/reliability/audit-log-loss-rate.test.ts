@@ -17,7 +17,10 @@ describe('Audit Log Loss Rate (Reliability)', () => {
     await rm(logDir, { recursive: true, force: true });
   });
 
-  it('should write and persist 1000 entries with zero loss', async () => {
+  // 1000 fsync-on-write operations on Windows fs typically exceed vitest's 5s default.
+  // TQCD 4.4 defines this as a correctness test (zero loss), not a performance test —
+  // raising the timeout is the correct fix, not lowering the iteration count.
+  it('should write and persist 1000 entries with zero loss', { timeout: 60_000 }, async () => {
     const entries: AuditLogEntry[] = [];
 
     // Generate 1000 entries

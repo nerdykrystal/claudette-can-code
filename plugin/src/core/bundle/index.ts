@@ -1,6 +1,11 @@
 import { readFile } from 'node:fs/promises';
-import { glob } from 'fast-glob';
+import fastGlob from 'fast-glob';
 import { Result } from '../types/index.js';
+
+// fast-glob ships as CommonJS with a default-exported callable. Under Node ESM,
+// named imports fail at runtime ("glob is not a function"). Governance revert
+// of the F9-F10 runtime break: use default import + call via .default fallback.
+const glob: typeof fastGlob = (fastGlob as unknown as { default?: typeof fastGlob }).default ?? fastGlob;
 
 export type BundleDocKind = 'PRD' | 'TRD' | 'AVD' | 'TQCD';
 
