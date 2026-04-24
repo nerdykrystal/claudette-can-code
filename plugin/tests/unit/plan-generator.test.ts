@@ -274,16 +274,7 @@ status: APPROVED
 
     if (!bundleResult.ok) throw new Error('Bundle setup failed');
 
-    // Mock generate to create an invalid plan by tampering with the schema check
-    // We'll test by triggering schema validation to fail
     const bundle = bundleResult.value;
-
-    // Create a plan with invalid gate.severityPolicy to trigger schema validation failure
-    const invalidBundle = {
-      ...bundle,
-      // Even though we can't directly corrupt, the schema validation will reject
-      // if the generated plan is malformed. We'll use a negative case approach.
-    };
 
     // Directly test the schema validation path by calling generate with valid input
     // and checking the validation returns ok: true

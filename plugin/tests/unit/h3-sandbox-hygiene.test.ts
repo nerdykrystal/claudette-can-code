@@ -261,7 +261,6 @@ describe('H3 Sandbox Hygiene Hook (FR-009)', () => {
   });
 
   it('stderr output on halt decision (lines 128-132)', async () => {
-    let auditLogged = false;
     let stderrCalls = 0;
 
     const deps: HandleDeps = {
@@ -276,7 +275,7 @@ describe('H3 Sandbox Hygiene Hook (FR-009)', () => {
       },
       auditLogger: {
         log: async () => {
-          auditLogged = true;
+          // Mock audit logging
         },
       } as unknown as AuditLogger,
       exit: () => {
