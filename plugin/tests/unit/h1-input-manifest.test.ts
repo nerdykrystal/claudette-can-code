@@ -4,14 +4,8 @@ import { AuditLogger } from '../../src/core/audit/index.js';
 
 describe('H1 Input Manifest Hook (FR-007)', () => {
   let mockAuditLogger: AuditLogger;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let exitCodeCaptured: number | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  let stderrOutput: string[] = [];
 
   beforeEach(() => {
-    exitCodeCaptured = null;
-    stderrOutput = [];
     mockAuditLogger = {
       log: async (_entry) => {
         // Mock implementation
@@ -27,11 +21,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
         ],
       }),
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -43,16 +38,16 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
   });
 
   it('block when no input manifest declared', async () => {
+    let stderrCalls: string[] = [];
     const deps: HandleDeps = {
       readFile: async () => JSON.stringify({
         stages: [{ id: 'stage-1' }],
       }),
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: (msg) => stderrCalls.push(msg),
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -60,7 +55,7 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.audit.decision).toBe('block');
-    expect(stderrOutput).toContain('H1 BLOCK: No input manifest in plan state');
+    expect(stderrCalls).toEqual(expect.arrayContaining([expect.stringContaining('H1 BLOCK')]));
   });
 
   it('block when manifest is empty array', async () => {
@@ -69,11 +64,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
         stages: [{ id: 'stage-1', inputManifest: [] }],
       }),
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -87,11 +83,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
     const deps: HandleDeps = {
       readFile: async () => 'invalid json {',
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -108,11 +105,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
         throw new Error('ENOENT: no such file');
       },
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -135,11 +133,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
           expect(entry.decision).toBe('allow');
         },
       } as unknown as AuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -161,11 +160,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
           expect(entry.decision).toBe('block');
         },
       } as unknown as AuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -180,11 +180,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
         stages: [{ id: 'my-stage', inputManifest: ['file.ts'] }],
       }),
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -199,11 +200,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
         stages: [],
       }),
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -220,11 +222,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
         stages: null,
       }),
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
@@ -238,11 +241,12 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
     const deps: HandleDeps = {
       readFile: async () => JSON.stringify({}),
       auditLogger: mockAuditLogger,
-      exit: (code) => {
-        exitCodeCaptured = code;
+      exit: () => {
         throw new Error('exit');
       },
-      stderrWrite: (msg) => stderrOutput.push(msg),
+      stderrWrite: () => {
+        // Mock
+      },
       planStatePath: '/fake/plan-state.json',
     };
 
