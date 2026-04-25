@@ -110,9 +110,23 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
           await deps.auditLogger.log(audit);
           return { exitCode: 0, audit };
         }
-      } catch {
-        // istanbul ignore next — Regex parsing edge case; gracefully falls back to block decision
-        // Fallback to simple text match failure
+      } catch (err) {
+        // BUILD_COMPLETE detected and a deviationManifest field was found, but the
+        // captured payload did not parse as JSON (or validateManifest threw). Per
+        // FR-008 anti-silent-substitution: a malformed manifest under BUILD_COMPLETE
+        // MUST block, not fall through to the "no sentinel" allow path.
+        const detail = err instanceof Error ? err.message : String(err);
+        const audit: AuditLogEntry = {
+          ts,
+          hookId: 'H2',
+          stage: null,
+          decision: 'block',
+          rationale: `deviationManifest parse failed: ${detail}`,
+          payload: { error: detail },
+        };
+        await deps.auditLogger.log(audit);
+        deps.stderrWrite('H2 BLOCK: deviationManifest parse failed');
+        return { exitCode: 1, audit };
       }
     }
 

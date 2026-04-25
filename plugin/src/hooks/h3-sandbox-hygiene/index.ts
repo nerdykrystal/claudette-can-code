@@ -67,14 +67,16 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
     };
     await deps.auditLogger.log(audit);
 
-    // Create marker for future invocations
+    // Create marker for future invocations. Marker creation is best-effort —
+    // if mkdir/writeFile fails (EACCES, ENOSPC, etc.) the audit decision is
+    // already recorded as 'allow' and we continue without escalation.
     const markerDir = join(deps.sandboxMarkerPath, '..');
     try {
       await deps.mkdir(markerDir, { recursive: true });
       await deps.writeFile(deps.sandboxMarkerPath, '');
     } catch {
-      // istanbul ignore next — Marker creation I/O edge case (permission denied, disk full); gracefully allows and continues
-      // Marker creation failed; continue (not fatal)
+      // Marker creation failed; continue (not fatal). Exercised by
+      // tests/unit/hooks/h2-h3-istanbul-removal.test.ts.
     }
 
     return { exitCode: 0, audit };
