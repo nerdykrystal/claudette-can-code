@@ -3,6 +3,8 @@
 // Stage 03: generate, dry-run. Stage 04: audit + hook installer.
 
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
 
 const USAGE = `cdcc — Claudette Can Code (Pro) Plugin MVP
 
@@ -156,11 +158,17 @@ async function main(): Promise<number> {
 // Export main for testing
 export { main };
 
-// Only call main if we're running as CLI (not imported as a module in tests)
-const isRunningDirectly = import.meta.url.includes(process.argv[1].replace(/\\/g, '/')) ||
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1].endsWith('cli/index.js') ||
-  process.argv[1].includes('cli/index.ts');
+// Only call main if we're running as CLI (not imported as a module in tests).
+// Uses realpathSync to handle npm-link symlinks/junctions on Windows where
+// argv[1] is the npm-side path and import.meta.url resolves to the real
+// (linked-target) path. Falls back to false on unresolvable paths.
+// istanbul ignore next — entry-point IIFE; tested via npm-link CLI dogfood
+let isRunningDirectly = false;
+try {
+  isRunningDirectly = import.meta.url === pathToFileURL(realpathSync(process.argv[1])).href;
+} catch {
+  isRunningDirectly = false;
+}
 
 if (isRunningDirectly) {
   main().then((code) => process.exit(code), (err) => {
