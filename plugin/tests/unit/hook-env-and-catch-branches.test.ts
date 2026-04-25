@@ -1,6 +1,7 @@
 // Final branch-coverage pushes for hook handlers:
-//   - `process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude')`
-//     left/right branches (CLAUDE_ROOT unset → `||` right; HOME unset → inner `||` right)
+//   - `process.env.CLAUDE_ROOT || join(homedir(), '.claude')` — exercises the
+//     CLAUDE_ROOT-falsy branch (the inner `process.env.HOME || '/root'` fallback
+//     was removed in v1.0.3 in favor of cross-platform `os.homedir()`)
 //   - `err instanceof Error ? err.message : String(err)` non-Error branch in handleImpl catches
 //     for each of H1, H4, H5 (H2/H3 already hit via existing tests)
 
@@ -36,52 +37,60 @@ function pipeFakeStdin(payload: string): void {
   });
 }
 
-describe('Hook handle() env default branches — CLAUDE_ROOT/HOME unset', () => {
-  let savedHome: string | undefined;
+describe('Hook handle() env default branches — CLAUDE_ROOT unset (uses homedir() fallback)', () => {
   let savedClaudeRoot: string | undefined;
+  let claudeRootDir: string;
 
-  beforeEach(() => {
-    savedHome = process.env.HOME;
+  beforeEach(async () => {
     savedClaudeRoot = process.env.CLAUDE_ROOT;
-    // Clear both so the `||` right-hand branches fire.
-    delete process.env.HOME;
-    delete process.env.CLAUDE_ROOT;
+    // Set CLAUDE_ROOT to an empty tmpdir so the resolution exercises the
+    // CLAUDE_ROOT-set branch deterministically AND points at a path with no
+    // plan-state.json. handle() then ENOENTs → halt decision → exit. This
+    // test setup makes the "no plan state" assertion deterministic regardless
+    // of homedir() behavior across platforms (Linux $HOME / Mac $HOME / Windows
+    // $USERPROFILE / containers).
+    claudeRootDir = await mkdtemp(join(tmpdir(), 'cdcc-default-branch-'));
+    process.env.CLAUDE_ROOT = claudeRootDir;
     stubExit();
   });
 
-  afterEach(() => {
-    if (savedHome !== undefined) process.env.HOME = savedHome;
-    if (savedClaudeRoot !== undefined) process.env.CLAUDE_ROOT = savedClaudeRoot;
+  afterEach(async () => {
+    if (savedClaudeRoot !== undefined) {
+      process.env.CLAUDE_ROOT = savedClaudeRoot;
+    } else {
+      delete process.env.CLAUDE_ROOT;
+    }
     restoreExit();
     vi.resetModules();
+    await rm(claudeRootDir, { recursive: true, force: true });
   });
 
-  it('H1 handle() uses /root fallback when HOME and CLAUDE_ROOT are unset', async () => {
+  it('H1 handle() halts when plan-state.json is absent (CLAUDE_ROOT empty)', async () => {
     const { handle } = await import('../../src/hooks/h1-input-manifest/index.js');
-    // handle() will try to read /root/.claude/plugins/cdcc/plan-state.json which
-    // doesn't exist → ENOENT caught by handleImpl outer catch → halt decision →
-    // process.exit(1) → our stub throws.
+    // handle() reads <CLAUDE_ROOT>/plugins/cdcc/plan-state.json which doesn't
+    // exist → ENOENT caught by handleImpl outer catch → halt → process.exit(1)
+    // → our stub throws.
     await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
   });
 
-  it('H2 handle() uses /root fallback when HOME and CLAUDE_ROOT are unset', async () => {
+  it('H2 handle() halts when plan-state.json is absent (CLAUDE_ROOT empty)', async () => {
     pipeFakeStdin('{}');
     const { handle } = await import('../../src/hooks/h2-deviation-manifest/index.js');
     await expect(handle()).rejects.toThrow(/__test_exit_stub__:[01]/);
   });
 
-  it('H3 handle() uses /root fallback when HOME and CLAUDE_ROOT are unset', async () => {
+  it('H3 handle() halts when plan-state.json is absent (CLAUDE_ROOT empty)', async () => {
     const { handle } = await import('../../src/hooks/h3-sandbox-hygiene/index.js');
     await expect(handle()).rejects.toThrow(/__test_exit_stub__:[01]/);
   });
 
-  it('H4 handle() uses /root fallback when HOME and CLAUDE_ROOT are unset', async () => {
+  it('H4 handle() halts when plan-state.json is absent (CLAUDE_ROOT empty)', async () => {
     pipeFakeStdin('{"tool":"Read"}');
     const { handle } = await import('../../src/hooks/h4-model-assignment/index.js');
     await expect(handle()).rejects.toThrow(/__test_exit_stub__:[01]/);
   });
 
-  it('H5 handle() uses /root fallback when HOME and CLAUDE_ROOT are unset', async () => {
+  it('H5 handle() halts when plan-state.json is absent (CLAUDE_ROOT empty)', async () => {
     pipeFakeStdin('{"converged":true,"counter":5,"findings":[]}');
     const { handle } = await import('../../src/hooks/h5-gate-result/index.js');
     await expect(handle()).rejects.toThrow(/__test_exit_stub__:[01]/);
