@@ -5,6 +5,7 @@
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { realpathSync } from 'node:fs';
+import { homedir } from 'node:os';
 
 const USAGE = `cdcc — Claudette Can Code (Pro) Plugin MVP
 
@@ -130,7 +131,7 @@ async function main(): Promise<number> {
   const { installHooks } = await import('../core/hook-installer/index.js');
   const { AuditLogger } = await import('../core/audit/index.js');
 
-  const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');
+  const claudeRoot = process.env.CLAUDE_ROOT || join(homedir(), '.claude');
   const coreModules = { consume, buildCatalog, generatePlan, writePlan, installHooks };
 
   switch (command) {

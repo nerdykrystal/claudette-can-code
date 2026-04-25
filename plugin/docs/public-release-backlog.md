@@ -105,6 +105,59 @@ The options significantly overlap with item #1. Evaluating them together is corr
 - Item #1 in this same doc — ExecutionPolicy friction, same distribution root cause
 - CDCC `plugin/README.md` — Installation section currently documents neither friction point; candidate for a Windows-install subsection even before v1.1 as a low-effort stopgap
 
+### 3. Cross-shell verification discipline missing from CDCC's own BUILD COMPLETE gates
+
+**Observed:** 2026-04-24 v1.0.1 → v1.0.2 → v1.0.3 patch series. Krystal's PowerShell-side install retest after BUILD COMPLETE surfaced THREE separate Windows-PowerShell-specific failures that gate-7 / gate-9 / gate-12 verification all missed: ExecutionPolicy (item #1), npm prefix not on PATH (item #2), and TWO distinct code-level bugs requiring v1.0.2 (CLI IIFE — see `gate-13`) and v1.0.3 (HOME env var fallback — see `gate-14`) patches in rapid succession.
+
+All four bugs share a root-cause class: gate verifications ran exclusively in Git Bash on Windows (where the Hardened Build Entrypoint Template's Step 7 commands execute via `bash` tool integrations), masking shell-specific portability bugs. Git Bash sets `HOME` automatically, resolves paths POSIX-style, and treats `/c/Users/...` differently from native Windows path resolution. PowerShell does none of those things. The verification environment did not include the user-install environment.
+
+**Current workaround (v1.0.3):** none — Krystal must re-test in PowerShell manually each release cycle and patch-commit a hotfix when she encounters Windows-specific bugs. This worked for v1.0.2 + v1.0.3 but is unsustainable.
+
+**Why this needs revisit at public release:**
+
+- For a Claude Code plugin that targets a developer audience that includes Windows + PowerShell users, ANY pre-public-release BUILD COMPLETE that hasn't been verified in PowerShell is a hidden ticking-time-bomb release. v1.0.1's BUILD COMPLETE was emitted with two latent Windows-PowerShell crashes; only Krystal's same-day install caught them. A public user encountering the same surface on day one of a public release would have no recourse — `cdcc generate` exits 0, claims success, writes nothing to disk.
+- The fix surface is a process discipline addition, not a code addition: enforce cross-shell verification in CDCC's gate-N final-verification block.
+
+**Options for v1.1+ evaluation:**
+
+1. **Add PowerShell verification to CDCC's gate-final block.** Each future BUILD COMPLETE gate runs the harness-level smoke test in BOTH Git Bash AND PowerShell (via `pwsh` or `powershell.exe` invocation from the build session). Fails the gate if either shell errors. Estimated cost: ~5 minutes added to each gate; trivial relative to the bug-discovery timeline post-release.
+
+2. **Add cmd.exe verification.** Some Windows users prefer or default to cmd.exe; behavior again differs (e.g., backtick handling, PATH semantics). A full Windows-three-shell matrix (Git Bash + PowerShell + cmd.exe) catches more failures than two.
+
+3. **Add Mac + Linux verification as well.** CDCC is intended to be cross-platform; right now verification is Windows-only (because the build runs on Krystal's Windows machine). Linux/Mac users may hit different bugs — most likely none in this codebase, but unverified is unverified.
+
+4. **CI-based cross-platform/cross-shell matrix** — eventually CDCC's CI should run the test suite + harness smoke test on Linux + Mac + Windows × bash + PowerShell + cmd, on every commit. Higher up-front cost; pays for itself the first time a public user would have hit a bug it caught.
+
+**Recommended decision point:** option 1 (PowerShell-in-gate-final) is the minimum bar for any v1.1+ release, and should be added to the Hardened Build Entrypoint Template (in `_experiments/protocols/`) as a parallel concern — it benefits all Martinez Methods app builds, not just CDCC. Option 4 (CI matrix) is the eventual public-release standard; estimable as a v1.2+ deliverable.
+
+**Related:**
+
+- `deprecated/asae-logs/gate-13-v1.0.2-windows-cli-iife-fix.md` — first instance (CLI IIFE)
+- `deprecated/asae-logs/gate-14-v1.0.3-windows-homedir-fix.md` — second instance (HOME env var)
+- Items #1 and #2 in this same doc — shell-installer-environment friction (ExecutionPolicy + npm PATH)
+- `_experiments/protocols/Hardened_Build_Entrypoint_Template_2026-04-22_v02_I.md` — the template that governs Step 7 final-verification across all Martinez Methods app builds; candidate v03_I bump should fold this in alongside F9 + F10 + F11 forbidden-actions language
+
+### 4. cdcc generate default install target — global vs project-local
+
+**Observed:** 2026-04-24 v1.0.3 review of homedir-fix scope. The `cdcc generate` command currently writes hook entries to the user's GLOBAL `~/.claude/settings.json` (when no `CLAUDE_ROOT` override is set). This means H1–H5 hooks fire for ALL of the user's Claude Code work on the machine, not just the project where `cdcc generate` was run.
+
+**Current behavior:** global by default; CLAUDE_ROOT overrides for sandboxing.
+
+**Design question for v1.1+:** is global-by-default the correct semantics, or should CDCC default to project-local `./.claude/settings.json` (write hooks alongside the `plan.json` it produces in cwd)?
+
+**Trade-offs:**
+
+- **Global default (current):** powerful — one `cdcc generate` covers all subsequent Claude Code work. Drawback: side-effects across unrelated projects; users with multiple Martinez Methods projects can't have per-project plans without per-invocation CLAUDE_ROOT manipulation.
+- **Project-local default:** scoped — hooks only fire in the project where they were generated. Drawback: requires re-running `cdcc generate` per project; users new to CDCC may not realize hooks are only project-scoped and wonder why their other Claude Code work isn't gated.
+- **Both, with explicit flag:** `cdcc generate <planning-dir>` defaults to one, `cdcc generate --global <planning-dir>` or `cdcc generate --project <planning-dir>` for the other. Most flexible; requires UX decision on which is default.
+
+**Recommended decision point:** at v1.1+ overhaul planning, decide based on intended primary user pattern. If CDCC is for "discipline this specific project's Claude Code work" → project-local default. If CDCC is for "discipline ALL my Claude Code work" → global default. Currently global by accident-of-implementation, not by deliberate choice.
+
+**Related:**
+
+- `gate-14-v1.0.3-windows-homedir-fix.md` Open Design Question section — first capture of this concern
+- `plugin/README.md` Installation section — currently does not clearly state this default; either decision should be reflected in user docs
+
 ## Maintenance
 
 New public-release concerns get appended as items below. Each item follows the shape: observed + current workaround + why this needs revisit + options + recommended decision point + related.

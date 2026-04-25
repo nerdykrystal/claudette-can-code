@@ -3,6 +3,7 @@
 // Exit 0 (allow) or 1 (block).
 
 import { join } from 'node:path';
+import { homedir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import Ajv from 'ajv';
 import { AuditLogger } from '../../core/audit/index.js';
@@ -159,7 +160,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
 
 // Default exported function for CLI entry point
 export async function handle(): Promise<void> {
-  const claudeRoot = process.env.CLAUDE_ROOT || join(process.env.HOME || '/root', '.claude');
+  const claudeRoot = process.env.CLAUDE_ROOT || join(homedir(), '.claude');
   const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));
 
   const result = await handleImpl({
