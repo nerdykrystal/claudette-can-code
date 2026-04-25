@@ -106,6 +106,48 @@ site.
 
 ### H5 (src/hooks/h5-gate-result/index.ts) — 100% branches ✓
 
+## Entry-point IIFE ignores — tooling-limitation justification (amended in gate-12 round)
+
+The 5 hook handler files retain a single `// istanbul ignore next` comment each
+on the entry-point IIFE shell:
+
+```typescript
+// istanbul ignore next — CLI entry point only executed when module is invoked
+//                        directly as script; coverage instrumentation tracked
+//                        in spawned child process is not merged back into the
+//                        in-process v8 coverage data.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  handle().catch((err) => { ... });
+}
+```
+
+**Justification**: this is a **coverage-instrumentation tooling limitation**, not
+a reachability judgment. The IIFE bodies ARE exercised end-to-end by the
+hook-CLI spawn tests in `tests/integration/hook-cli-spawn.test.ts` (8 tests
+spawning `node dist/hooks/hN-*/index.js`) — those spawn `child_process.spawnSync`
+which executes the dist artifact in a separate Node process. The vitest v8
+coverage provider's `@vitest/coverage-v8` instrument hooks `--inspect`-style
+into the parent process and collects via the V8 inspector protocol (see
+[vitest coverage docs](https://vitest.dev/guide/coverage.html) and
+[c8 README](https://github.com/bcoe/c8) — c8 inherits the same V8 limitation):
+**coverage data emitted by spawned child processes is not merged into the
+parent process's coverage report unless explicitly orchestrated via
+`NODE_V8_COVERAGE` env-var rendezvous, which Stryker's coverage analysis does
+not coordinate with our spawn tests.**
+
+The IIFE callback bodies ARE additionally exercised by the in-process tests in
+`tests/unit/hook-iife-callback-coverage.test.ts` (5 tests that override
+`process.argv[1]` to match `import.meta.url` and force `handle()` to reject via
+a throwing AuditLogger), which DID lift coverage on those lines from the
+gate-08 baseline. The *outer if-statement* of the IIFE remains uncovered under
+the v8 provider for the same spawn-vs-instrumentation reason — the body inside
+the `if` is exercised, but the boolean evaluation of the `if` itself is
+attributed to import-time top-level evaluation and not associated with a
+specific test under v8's per-test coverage model.
+
+This is a strictly objective tooling-limitation residual, distinct from the
+reachability-judgment residuals enumerated below.
+
 ## Reachability-impossible summary
 
 **Pattern A (7 sites)**: `|| default` / `?? default` fallbacks on parameters
