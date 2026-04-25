@@ -1,7 +1,9 @@
 # Martinez Methods ASAE enforcement policy
 # Consumed by .githooks/commit-msg per Rule 2 (ASAE gate attestation per commit).
-# Documentation: _grand_repo/docs/Commit_Persona_Hook_2026-04-24_v02_I.md
+# Documentation: _grand_repo/docs/Commit_Persona_Hook_2026-04-25_v03_I.md
 
-visibility: private
+# CDCC is currently public (flipped 2026-04-25 for Claude Design ingest;
+# Krystal's 2026-04-25 directive: CDCC stays public)
+visibility: public
 going-public: true
 type: codebase
