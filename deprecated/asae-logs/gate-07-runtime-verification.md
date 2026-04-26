@@ -78,7 +78,7 @@ Strict policy: HIGH resets counter. **Counter = 0.**
 | # | Condition | Status |
 |---|---|---|
 | 1 | Every CDCC_TQCD criterion objectively satisfied (tests pass, coverage 100/100/100/100, typecheck 0, lint 0, reliability tests pass) | **PARTIAL → NOT MET** — typecheck/build/lint/test all 0; coverage below 100; mutation unrun |
-| 2 | Every ASAE gate converged (including gate-05 + gate-06) | **NOT MET** — gate-05-rerun HALT and gate-06 HALT remain in the record as historical HALTs; this gate-07 does not converge under strict |
+| 2 | Every ASAE gate converged (including gate-05 + gate-06) | **NOT MET** — gate-50-rerun HALT (renumbered from gate-05-rerun by gate-53 collision cleanup) and gate-06 HALT remain in the record as historical HALTs; this gate-07 does not converge under strict |
 | 3 | IP-clean | **MET** — verified below |
 | 4 | model-routing-log shows Haiku sub-agents executed fixes + Stage 05 (not Opus parent) | **MET for fixes** (5 Haiku sub-agent delegations recorded); **Stage 05 NEVER DELEGATED** (user never instructed Stage 05 after the F9 discovery superseded it) |
 | 5 | Plugin installable | **MET** — harness-verified `cdcc --help / dry-run / generate` all exit 0, artifacts produced correctly |

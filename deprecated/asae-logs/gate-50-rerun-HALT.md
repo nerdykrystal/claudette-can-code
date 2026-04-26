@@ -1,5 +1,5 @@
 ---
-gate_id: gate-05-rerun-post-hook-coverage-remediation
+gate_id: gate-50-rerun-post-hook-coverage-remediation
 target: [workspace/plugin/vitest.config.ts, workspace/plugin/src/hooks/**, workspace/plugin/tests/**]
 sources: [gate-05-test-fix-verification.md (initial HALT), hook-coverage remediation sub-agent report, vitest.config.ts diff]
 prompt: "Re-evaluate after the hook-coverage-remediation Haiku sub-agent's claimed fix."

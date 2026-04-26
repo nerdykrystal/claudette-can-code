@@ -1,5 +1,5 @@
 ---
-gate_id: gate-22-stage-00-expansion-backlog-item-6-2026-04-26
+gate_id: gate-51-stage-00-expansion-backlog-item-6-2026-04-26
 target: 1 file in claudette-can-code-plugin — plugin/docs/public-release-backlog.md (Item 6 added)
 sources:
   - existing public-release-backlog.md Items 1-5 as structural pattern (Item 5 directly precedent — UXD/5-doc methodology-vs-plugin drift)

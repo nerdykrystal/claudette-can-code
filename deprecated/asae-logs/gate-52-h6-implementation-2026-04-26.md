@@ -1,5 +1,5 @@
 ---
-gate_id: gate-23-h6-implementation-2026-04-26
+gate_id: gate-52-h6-implementation-2026-04-26
 target: |
   CDCC plugin H6 PreToolUse hook implementation in claudette-can-code-plugin/plugin:
     - src/hooks/h6-step-reexec/{index.ts, step-identity.ts, authority-check.ts, step-history.ts, README.md}
