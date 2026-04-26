@@ -29,15 +29,15 @@ owner: Krystal Martinez (krystal@stahlsystems.com)
 
 ## BIDX-2 Artifact roster
 
-| Artifact | File | Version | Status | SHA-256 (short, current) | SHA-256 (rater-1 PARTIAL; partial-remediation) | SHA-256 (pre-remediation, original Pass 1/2/3) |
-|---|---|---|---|---|---|---|
-| PRD | CDCC_PRD_2026-04-26_v01_I.md | v01 | I | 9af5e8 | b7f9d8 | 0f3a78 |
-| TRD | CDCC_TRD_2026-04-26_v01_I.md | v01 | I | e85c14 | 7d4f50 | c296bf |
-| AVD | CDCC_AVD_2026-04-26_v01_I.md | v01 | I | 986e73 | e01cba | 727d81 |
-| TQCD | CDCC_TQCD_2026-04-26_v01_I.md | v01 | I | d9b017 | 7a55a6 | b2d979 |
-| UXD | CDCC_UXD_2026-04-26_v01_I.md | v01 | I | d95f1d | a79adb | 57e55f |
+| Artifact | File | Version | Status | SHA-256 (short, current — post-gate-49 amendment) | SHA-256 (gate-48 PASS final) | SHA-256 (rater-1 PARTIAL; partial-remediation) | SHA-256 (pre-remediation, original Pass 1/2/3) |
+|---|---|---|---|---|---|---|---|
+| PRD | CDCC_PRD_2026-04-26_v01_I.md | v01 | I | e65566 | 9af5e8 | b7f9d8 | 0f3a78 |
+| TRD | CDCC_TRD_2026-04-26_v01_I.md | v01 | I | 4511c9 | e85c14 | 7d4f50 | c296bf |
+| AVD | CDCC_AVD_2026-04-26_v01_I.md | v01 | I | 0c0e31 | 986e73 | e01cba | 727d81 |
+| TQCD | CDCC_TQCD_2026-04-26_v01_I.md | v01 | I | 783961 | d9b017 | 7a55a6 | b2d979 |
+| UXD | CDCC_UXD_2026-04-26_v01_I.md | v01 | I | b794c3 | d95f1d | a79adb | 57e55f |
 
-Three columns make the full gate-48 remediation history auditable: (1) **current** is the live bytes of each file post second-rater feedback (NEW-FINDING-1 closure across all 19 load-bearing surfaces, NEW-FINDING-A/B/C closures); (2) **rater-1 PARTIAL** is the bytes after the first remediation pass which the second rater (agentId a82e6b0bdf3418f10) found insufficient (incomplete remediation per NEW-FINDING-A); (3) **pre-remediation** is the bytes the primary auditor's original Pass 1/2/3 evaluated. Per Bundle_Index_Schema §6.4 the current column becomes the cryptographic record at any subsequent `R` / `A` status transition.
+Four columns make the full gate-48 + gate-49 remediation history auditable: (1) **post-gate-49 amendment (current)** is the live bytes after gate-49 reconciled 5 stale claim clusters against `/asae SKILL.md` v06 canonicalization (A21 ACCEPTED; flag references removed; `git reset --hard` replaced with additive `git revert --no-edit <sha>` per v06 lines 313-322 schema; Tier 14 LIVE; Two-Axis Pitch source-path references redirected to `/asae SKILL.md` v06 lines 297-326 + CCC session UUID `c1632207-ee0e-4378-be01-6eed39b2d3b1`); (2) **gate-48 PASS final** is the bytes at gate-48 strict-3 PASS rater CONFIRMED; (3) **rater-1 PARTIAL** is the bytes after the first remediation pass which the second rater (agentId a82e6b0bdf3418f10) found insufficient; (4) **pre-remediation** is the bytes the primary auditor's original Pass 1/2/3 evaluated. Per Bundle_Index_Schema §6.4 the current column becomes the cryptographic record at any subsequent `R` / `A` status transition.
 
 **Filename grammar honest gap.** Per `File_Naming_And_Versioning §4.1`, bundle docs follow `<DOC>_<bundle-slug>_<YYYY-MM-DD>_v<NN>_<status>.md`. The user's explicit prompt specified `CDCC_DOC_<YYYY-MM-DD>_v<NN>_<status>.md` (project-prefix-first) per the v03 PRD/TRD/AVD/TQCD/UXD template "How To Use This Template" line, which uses `[ProjectPrefix]_DOC_...`. The two grammars conflict. This bundle honors the user's explicit naming. The BIDX itself uses the canonical bundle-slug grammar (`BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md`) per File_Naming §4.2. Resolution is methodology-amendment territory; flagged here as a known discrepancy for the next foundation-file gate.
 
@@ -133,7 +133,7 @@ Note on level conventions: the templates use `### {DOC}-{TYPE}-{NUMBER}` for con
 | AVD-AD-02 | 3 | plan-state.json + HMAC | AVD | #avd-ad-02 |
 | AVD-AD-03 | 3 | Hook IDs Single SoT in plugin.json | AVD | #avd-ad-03 |
 | AVD-AD-04 | 3 | extractExcellenceSpec actually extracts | AVD | #avd-ad-04 |
-| AVD-AD-05 | 3 | A21 DRR codification (PROPOSED) | AVD | #avd-ad-05 |
+| AVD-AD-05 | 3 | A21 DRR codification (ACCEPTED — canonical per /asae v06; gate-54) | AVD | #avd-ad-05 |
 | AVD-AD-06 | 3 | H8 protected_files.yaml + PreToolUse (A18 + roadmap P3 H8; A22 standalone-aspect REJECTED) | AVD | #avd-ad-06 |
 | AVD-AD-07 | 3 | 5-Doc Bundle Support via /upgrade-bundle | AVD | #avd-ad-07 |
 | AVD-AD-08 | 3 | H6 Merged: Step-History + Cost-Telemetry | AVD | #avd-ad-08 |
@@ -195,7 +195,7 @@ Selected high-leverage cross-references demonstrating chain integrity. Full mech
 | PRD/TRD/AVD source | Closes gate-22 finding | TRD-FR | AVD-AC / AD | TQCD test_path / EC | Status |
 |---|---|---|---|---|---|
 | PRD-SO-01 | all 29 findings | TRD-FR-01..17 | AVD all components | TQCD-5.2 every row | covered |
-| PRD-SO-02 | (codifies A21) | TRD-FR-08 | AVD-AC-08 + AVD-AD-05 | TQCD-FM-STRESS-03 + tests/e2e/h9-drr-recovery.test.ts | covered (PROPOSED status) |
+| PRD-SO-02 | (codifies A21) | TRD-FR-08 | AVD-AC-08 + AVD-AD-05 | TQCD-FM-STRESS-03 + tests/e2e/h9-drr-recovery.test.ts | covered (ACCEPTED — canonical per /asae v06 lines 297-326; gate-54 attestation; hook v06 Tier 14 LIVE) |
 | PRD-SO-03 | (implements A18 path-level + roadmap P3 H8; A22 standalone-aspect REJECTED) | TRD-FR-07 | AVD-AC-07 + AVD-AD-06 | tests/regression/h8-protected-files.test.ts | covered (mechanism unchanged; attribution corrected post gate-48 NEW-FINDING-1) |
 | PRD-SO-04 | M-9 | TRD-FR-06 | AVD-AD-07 | tests/regression/m9-bundle-version-routing.test.ts | covered |
 | PRD-SO-05 | C-2, M-1, M-4 | TRD-FR-02 | AVD-AD-01 + AVD-AC-17 | tests/reliability/audit-byte-equal.test.ts | covered |
@@ -216,6 +216,7 @@ Selected high-leverage cross-references demonstrating chain integrity. Full mech
 - **2026-04-26 v01 I [editorial — gate-48 NEW-FINDING-1 first remediation]:** Per /asae Step 6 rater 1 (agentId ab7754ea4c7e942ff) verdict PARTIAL with HIGH NEW-FINDING-1: the cited Two-Axis Pitch source content was v02_I (filename retains _v01_I). v02 records FM thread rater 2026-04-26 verdict A22 FAIL ≥3-FM-per-aspect guard. Headline attributions corrected at PRD-SO-03 / PRD-AS-03 / TRD-FR-07 / AVD-AD-06 / TQCD-EC-02 / UXD-UN-h8-refusal. Mechanism unchanged. SHA-256 shorts updated; pre-remediation shorts preserved.
 - **2026-04-26 v01 I [editorial — gate-48 NEW-FINDING-A second remediation]:** Per rater 2 (agentId a82e6b0bdf3418f10) verdict PARTIAL with HIGH NEW-FINDING-A: first remediation was incomplete; A22-as-active-aspect language persisted in 19 additional load-bearing spots. Second remediation pass applied: PRD frontmatter description + PRD-AR-NV-05 + PRD-SO-Out-03 (renamed to "H8 Refusal Fires") + PRD-OQ-02 + PRD amendment trigger + TRD-BR-03 (heading "When H8 Refuses") + TRD §3.3 standards line + TRD-AS-03 (renamed "A21 PASSED; A22 REJECTED") + AVD frontmatter description + AVD-DF-03 (heading "H8 Protected-File Refusal") + AVD §6.4 + AVD §10 stakeholder + TQCD-TC-S38 + TQCD reviewer-checklist filename (a22-refusal.md → h8-refusal.md) + TQCD §7.4 + UXD UN-h8-refusal observable + BIDX-3 row 137 + BIDX-3 row 175 + BIDX-4 row 199 + BIDX-92 glossary all updated. SHA-256 shorts updated again; BIDX-2 now shows three columns (current / rater-1-PARTIAL / pre-remediation-original).
 - **2026-04-26 v01 I [editorial — gate-48 PASS with rater 3 CONFIRMED]:** Rater 3 (agentId aaee296ab0943c6de) verified all 20 spots correctly remediated; verdict CONFIRMED. Passes 5/6/7 identical-scope-and-findings (3 LOW out-of-scope-by-design). Counter 3/3. Gate-48 final exit status: **PASS at strict-3 with rater CONFIRMED**. Commit trailer: `ASAE-Gate: strict-3-PASS`.
+- **2026-04-26 v01 I [amendment — gate-49 post-/asae-v06-canonicalization reconciliation]:** Bundle authored at gate-48 pre-dated `/asae SKILL.md` v06 canonicalization (committed at gate-54 via methodology commit `repos/0e44b48`, "ASAE v06: A21 DRR canonical absorption + A14-A20 + A22 rejection doc"; hook v06 Tier 14 LIVE). Gate-49 surgically amended 5 stale claim clusters: (1) A21 status flipped from "PROPOSED PENDING" to "ACCEPTED (canonical per /asae v06)" at PRD-AS-03 / PRD-SO-02 / TRD-AS-03 / TRD-FR-08 / AVD-AD-05 / AVD-AC-08 / BIDX-91 / BIDX-4; gate references updated from gate-49 → gate-54 where they cited the canonicalization gate; (2) `cdcc.experimental.drr` flag references removed from PRD-AS-03 fallback / TRD-FR-08 / TRD-AS-03 / TRD-NFR-3.9-05 — A21 is canonical, not experimental; (3) destructive `git reset --hard <revert_target>` replaced with additive `git revert --no-edit <sha>` (hex-hash case) + `git restore .` / `git checkout -- .` (working_tree_state literal case) per `/asae SKILL.md` v06 lines 313-322 schema and CCC empirical pattern (4 documented cycles, session UUID `c1632207-ee0e-4378-be01-6eed39b2d3b1`, cited verbatim at v06 line 324) — across TRD-FR-08 / TRD-BR-02 / TRD-INT-04 / AVD-AC-08 / AVD-AD-05 / AVD-DF-04 / UXD-UP-03 / UXD-UN-catastrophic-drr-failure; (4) AVD-AD-05 Consequences rewritten — Tier 14 is LIVE NOW in `/asae` commit-msg hook v06 (gate-54), not deferred; (5) Two-Axis Pitch source-path references (`_grand_repo/.claude/scratch/market-research-2026-04-26/Two_Axis_Commercial_Pitch_2026-04-26_v01_I.md` — file no longer exists on disk; content absorbed verbatim into `/asae SKILL.md` v06 lines 297-326) redirected to `repos/.claude/skills/asae/SKILL.md` (v06 lines 297-326) + CCC session UUID at AVD-AD-05 / AVD-AD-06 / TQCD-EC-02 / TQCD §5.2.1 cross-reference / BIDX-90. SHA-256 shorts updated; gate-48-PASS shorts preserved as third column. Mechanism unchanged across the bundle; only the 5 stale claim clusters reconciled to canonical methodology.
 
 ## BIDX-90 Appendix A: External References
 
@@ -223,7 +224,9 @@ Selected high-leverage cross-references demonstrating chain integrity. Full mech
 - D2R skill — `C:/Users/NerdyKrystal/repos/.claude/skills/dare-to-rise-code-plan/`
 - Foundation files — `dare-to-rise-code-plan/references/` (PRD/TRD/AVD/TQCD/UXD templates + Heading_Prefix + Bundle_Index_Schema + Methodology_Versioning + File_Naming_And_Versioning)
 - Multi-Taxonomy FM Scoreboard v03 — `_grand_repo/.claude/worktrees/hopeful-swanson-790316/docs/Multi_Taxonomy_FM_Scoreboard_2026-04-26_v03_I.md`
-- Two-Axis Commercial Pitch — `_grand_repo/.claude/scratch/market-research-2026-04-26/Two_Axis_Commercial_Pitch_2026-04-26_v01_I.md` (filename retains `_v01_I.md` pending file rename per File_Naming §6 atomicity rule; **internal version is v02_I**, supersedes v01_I same-day with FM thread rater verdict: A21 PASS with FM-ID corrections, A22 FAIL ≥3-FM-per-aspect guard — A22 dropped, folded into A18 + roadmap P3 H8). Bundle's PRD-SO-03 / TRD-FR-07 / AVD-AD-06 / TQCD-EC-02 / UXD-UN-h8-refusal A22-attribution corrected accordingly per gate-48 NEW-FINDING-1 remediation.
+- /asae SKILL.md v06 (canonical A21 source post-absorption) — `repos/.claude/skills/asae/SKILL.md` (v06 lines 297-326 = A21 DRR canonical absorption; lines 291-295 = A22 rejection doc; lines 313-322 = recovery_events schema; line 322 = Tier 14 LIVE clause; line 324 = CCC empirical evidence citation). Methodology commit: `repos/0e44b48` ("ASAE v06: A21 DRR canonical absorption + A14-A20 + A22 rejection doc") at gate-54.
+- CCC build empirical evidence — session UUID `c1632207-ee0e-4378-be01-6eed39b2d3b1` (4 documented `git revert --no-edit <sha>` cycles; cited verbatim at `/asae SKILL.md` v06 line 324 as A21's evidence base).
+- Two-Axis Commercial Pitch (historical pointer) — file at `_grand_repo/.claude/scratch/market-research-2026-04-26/Two_Axis_Commercial_Pitch_2026-04-26_v01_I.md` no longer exists on disk; content absorbed verbatim into `/asae SKILL.md` v06 (canonical) at gate-54. Bundle's PRD-SO-03 / TRD-FR-07 / AVD-AD-06 / TQCD-EC-02 / UXD-UN-h8-refusal A22-attribution corrected per gate-48 NEW-FINDING-1 remediation; A21 canonicalization status updated per gate-49 amendment.
 - gate-22 (CDCC v1.0.4 adversarial code review) — `claudette-can-code/deprecated/asae-logs/gate-22-cdcc-adversarial-code-review-v1.0.4-2026-04-26.md`
 - gate-48 (this bundle's authoring gate) — to be committed alongside this BIDX
 
@@ -231,7 +234,7 @@ Selected high-leverage cross-references demonstrating chain integrity. Full mech
 
 - Filename grammar reconciliation (DOC_slug vs ProjectPrefix_DOC) — methodology amendment territory.
 - Heading-prefix grammar reconciliation (`### PRD-1.4.5` dotted vs `### PRD-AR-NV-01` typed) — methodology amendment territory.
-- A21 aspect ratification into /asae SKILL.md canonical methodology — pending. (FM thread rater 2026-04-26 PASSED A21 with FM-ID corrections; the SKILL.md commitment is the next step.)
+- A21 aspect ratification into /asae SKILL.md canonical methodology — **CLOSED at gate-54** (methodology commit `repos/0e44b48` "ASAE v06: A21 DRR canonical absorption + A14-A20 + A22 rejection doc"). Hook v06 Tier 14 LIVE per `/asae SKILL.md` v06 line 322. Gate-49 amendment reconciled bundle text accordingly.
 - A22 aspect — REJECTED by FM thread rater 2026-04-26 (≥3-FM-per-aspect guard failure); path-level concern folded into A18 + roadmap P3 H8. Bundle's H8 hook + protected_files.yaml mechanism unchanged in v1.1.0; only aspect attribution corrected.
 
 ## BIDX-92 Appendix C: Glossary
