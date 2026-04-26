@@ -158,6 +158,49 @@ All four bugs share a root-cause class: gate verifications ran exclusively in Gi
 - `gate-14-v1.0.3-windows-homedir-fix.md` Open Design Question section — first capture of this concern
 - `plugin/README.md` Installation section — currently does not clearly state this default; either decision should be reflected in user docs
 
+### 5. Support 5-doc D2R prerequisite bundle (PRD + TRD + AVD + TQCD + UXD) — required for v1.1+
+
+**Observed:** 2026-04-25, after the CCC v1.0 → v1.0.1 schema-fix cycle. Krystal flagged that the implementation passed all functional acceptance tests + 100/100/100/100 coverage but the UI was "absolutely not production or deployment ready or even MVP ready" — bland-React-component-library-grade output despite the methodology shipping. Diagnosis: the 4-doc D2R prerequisite bundle (PRD + TRD + AVD + TQCD) is missing the visual + interaction reality anchor. Implementation falls back to generic-component-library defaults regardless of what the 4 docs specify because no doc constrains visual character.
+
+This is the F13-equivalent failure at the design layer (F13 = test fixtures synthesized from schema → tests pass against fictional inputs; design-layer analog = UI built from prose specs without reference design assets → app passes acceptance tests but fails standard-of-excellence review).
+
+**Resolution authored 2026-04-25 in the methodology layer:**
+
+- New 5th input doc: **UXD** (User Experience Document) — covers visual design system + interaction patterns + accessibility-as-delight + reference design assets + polish criteria
+- New skill: `/write-uxd`
+- New ASAE domain: `design`
+- New D2R stage: **Stage NN+1 Design Polish** between final implementation stage and Stage QA, runs at `/asae` `domain=design` threshold 3 strict
+- Updated `/ideate-to-d2r-ready` Phase 1 with 3 additional UXD-readiness questions (reference apps + brand voice + anti-pattern targets)
+- Updated `/ideate-to-d2r-ready` Phase 3 cross-doc audit with 3 new UXD-related checks + the three-way TRD↔UXD↔TQCD standards alignment check (the 6-layer accessibility hardwiring chain)
+- Documented 6-layer accessibility model in `/dare-to-rise-code-plan` skill
+
+See: `repos/.claude/skills/dare-to-rise-code-plan/references/UXD_Template_2026-04-25_v01_I.md` (template); `repos/.claude/skills/write-uxd/SKILL.md` (authorship skill); updated `repos/.claude/skills/asae/SKILL.md` (adds `domain: design` checklist); updated `repos/.claude/skills/dare-to-rise-code-plan/SKILL.md` (adds Stage NN+1 Design Polish + 6-layer accessibility hardwiring); updated `repos/.claude/skills/ideate-to-d2r-ready/SKILL.md` (adds Phase 1 Q6-Q8 + Phase 2 Step 2.5 + Phase 3 three-way standards alignment).
+
+**Why this needs revisit at v1.1+:** the CDCC plugin currently consumes a 4-doc D2R bundle. The plan-generation pipeline + the H1-H5 hooks operate on the 4-doc inputs. With the 5th doc added at the methodology layer, CDCC v1.0.x is silently behind the methodology — a project authored with the new 5-doc methodology hands CDCC something CDCC's plan generator doesn't know to read. The UXD will be ignored at plan generation time, defeating the purpose.
+
+**Options for v1.1+ evaluation:**
+
+1. **Extend Bundle Consumer to read UXD as 5th input** — primary fix. The Bundle Consumer (Stage 03 library code) currently reads PRD + TRD + AVD + TQCD; v1.1+ extends it to also read UXD. Plan generator passes UXD-derived constraints to subsequent stages.
+
+2. **Add Stage NN+1 Design Polish to the plan template** — when CDCC generates a plan from a 5-doc bundle, the plan must include a Stage NN+1 Design Polish stage between final implementation and Stage QA. Sonnet-routed by default per the methodology spec.
+
+3. **Update H1 Input Manifest hook** — H1 currently validates ambient filesystem against `inputManifest` declared in the plan. With UXD in the bundle, the input manifest must include UXD's reference design assets directory, OR H1 must be relaxed to permit asset directories under a documented path (e.g., `inputs/uxd-assets/`).
+
+4. **Add `/asae` `domain=design` recognition** — the H5 Gate Result hook validates ConvergenceGateResult payloads. v1.1+ must recognize `domain: design` payloads as valid (not just `code` / `document` / etc.). The Convergence Gate Engine's domain checklist enumeration needs the design checklist added.
+
+5. **Update `cdcc generate` CLI** — currently expects a 4-doc bundle directory; v1.1+ should expect a 5-doc bundle directory with optional reference design assets subdirectory. CLI help text + error messages updated to reflect.
+
+**Recommended decision point:** v1.1.0 release should bundle items 1-4 as a coherent "5-doc bundle support" feature. Item 5 (CLI updates) follows naturally. Stage 05 CDCC residual list (PostToolUse hooks blocking incomplete-stub tokens, etc.) can be addressed in v1.0.x patches; the 5-doc support is a v1.1.0 minor-version-bump scope feature.
+
+**Related:**
+
+- `repos/.claude/skills/dare-to-rise-code-plan/references/UXD_Template_2026-04-25_v01_I.md` — UXD template
+- `repos/.claude/skills/write-uxd/SKILL.md` — UXD authorship skill
+- `repos/.claude/skills/dare-to-rise-code-plan/SKILL.md` — D2R skill with 5-doc prerequisite + Stage NN+1 Design Polish + 6-layer accessibility hardwiring
+- `repos/.claude/skills/asae/SKILL.md` — `/asae` skill with `domain: design` checklist
+- `repos/.claude/skills/ideate-to-d2r-ready/SKILL.md` — orchestrator with UXD-readiness Phase 1 questions + Phase 3 three-way standards alignment
+- F13 corpus entry in `_experiments` — the design-layer reality-anchor argument that motivates UXD; `_experiments/experiments/d2r_methodology_factorial/analysis/exploratory_findings_2026-04-22_prompt-variance_v03_I.md` (or whatever version is current when v1.1.0 plans)
+
 ## Maintenance
 
 New public-release concerns get appended as items below. Each item follows the shape: observed + current workaround + why this needs revisit + options + recommended decision point + related.
