@@ -14,7 +14,7 @@
     },
     "hookId": {
       "type": "string",
-      "enum": ["H1", "H2", "H3", "H4", "H5", "plan_generated", "dry_run", "audit_query"]
+      "enum": ["H1", "H2", "H3", "H4", "H5", "H6", "plan_generated", "dry_run", "audit_query"]
     },
     "stage": {
       "type": ["string", "null"],

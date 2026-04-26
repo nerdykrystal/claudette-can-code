@@ -7,7 +7,7 @@ import { randomBytes } from 'node:crypto';
 import type { Result } from '../types/index.js';
 
 export interface HookEntry {
-  id: 'H1' | 'H2' | 'H3' | 'H4' | 'H5';
+  id: 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6';
   event: string;
   handler: string;
   matcher?: Record<string, unknown>;

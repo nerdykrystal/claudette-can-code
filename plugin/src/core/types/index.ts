@@ -9,7 +9,7 @@ export type Severity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type SeverityPolicy = 'strict' | 'standard';
 export type GateDomain = 'code' | 'plan' | 'test' | 'audit' | 'general';
 export type HookDecision = 'allow' | 'block' | 'halt';
-export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'plan_generated' | 'dry_run' | 'audit_query';
+export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6' | 'plan_generated' | 'dry_run' | 'audit_query';
 
 export interface GateSpec {
   threshold: number;

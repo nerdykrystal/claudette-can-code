@@ -9,7 +9,7 @@ import type { Result } from '../types/index.js';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const ajv = new (Ajv as any)({ validateFormats: false });
 
-export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'plan_generated' | 'dry_run' | 'audit_query';
+export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6' | 'plan_generated' | 'dry_run' | 'audit_query';
 export type Decision = 'allow' | 'block' | 'halt';
 
 export interface AuditLogEntry {
@@ -36,7 +36,7 @@ const auditEntrySchema = {
     ts: { type: 'string', format: 'date-time', description: 'ISO 8601 timestamp' },
     hookId: {
       type: 'string',
-      enum: ['H1', 'H2', 'H3', 'H4', 'H5', 'plan_generated', 'dry_run', 'audit_query'],
+      enum: ['H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'plan_generated', 'dry_run', 'audit_query'],
     },
     stage: { type: ['string', 'null'], description: 'Stage ID or null for plan-level events' },
     decision: { type: 'string', enum: ['allow', 'block', 'halt'] },

@@ -26,7 +26,8 @@
       { "id": "H2", "event": "Stop", "handler": "dist/hooks/h2-deviation-manifest/index.js" },
       { "id": "H3", "event": "PreToolUse", "handler": "dist/hooks/h3-sandbox-hygiene/index.js" },
       { "id": "H4", "event": "PreToolUse", "handler": "dist/hooks/h4-model-assignment/index.js" },
-      { "id": "H5", "event": "Stop", "handler": "dist/hooks/h5-gate-result/index.js" }
+      { "id": "H5", "event": "Stop", "handler": "dist/hooks/h5-gate-result/index.js" },
+      { "id": "H6", "event": "PreToolUse", "handler": "dist/hooks/h6-step-reexec/index.js" }
     ]
   }
 }

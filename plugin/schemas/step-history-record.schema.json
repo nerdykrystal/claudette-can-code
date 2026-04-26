@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://martinez.methods/cdcc/schemas/step-history-record.schema.json",
+  "title": "StepHistoryRecord",
+  "description": "Single record in the append-only CDCC step-history JSONL log consulted by the H6 PreToolUse Step-Re-Execution Guard. Each line in <plan_dir>/cdcc-step-history.jsonl conforms to this schema.",
+  "type": "object",
+  "required": ["ts", "step_id", "hash_of_inputs", "tool", "agent_persona", "authorized_by", "gate_ref"],
+  "additionalProperties": false,
+  "properties": {
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp at which the step was admitted (allow decision)"
+    },
+    "step_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable operation identifier. For Write/Edit: '<Tool>::<file_path>'. For Bash: 'Bash::<normalized-command-signature>' (PAT-redacted, timestamps/seeds/epoch blobs replaced with placeholders)."
+    },
+    "hash_of_inputs": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 hash of the structured inputs. Write: content. Edit: JSON of {old, new}. Bash: PAT-redacted command string."
+    },
+    "tool": {
+      "type": "string",
+      "enum": ["Write", "Edit", "Bash"],
+      "description": "PreToolUse tool name. H6 only fires on these three destructive tools per the 2026-04-26 scope decision."
+    },
+    "agent_persona": {
+      "type": ["string", "null"],
+      "description": "Persona slug under whose authority the step was attempted (e.g. 'clauda-the-value-genius', 'claudette-the-code-debugger'). Null when not provided in the PreToolUse payload."
+    },
+    "authorized_by": {
+      "type": ["string", "null"],
+      "description": "Gate reference (e.g. 'gate-44') if this record was admitted as an authorized re-execution. Null for fresh steps."
+    },
+    "gate_ref": {
+      "type": ["string", "null"],
+      "description": "Duplicate of authorized_by retained for forward-compatibility with consumers that key on gate_ref. Null for fresh steps."
+    }
+  }
+}
