@@ -201,6 +201,62 @@ See: `repos/.claude/skills/dare-to-rise-code-plan/references/UXD_Template_2026-0
 - `repos/.claude/skills/ideate-to-d2r-ready/SKILL.md` — orchestrator with UXD-readiness Phase 1 questions + Phase 3 three-way standards alignment
 - F13 corpus entry in `_experiments` — the design-layer reality-anchor argument that motivates UXD; `_experiments/experiments/d2r_methodology_factorial/analysis/exploratory_findings_2026-04-22_prompt-variance_v03_I.md` (or whatever version is current when v1.1.0 plans)
 
+### 6. Support N-track Stage 00 (16 hardwired + 4 applicability-gated) + extended TRD/AVD/TQCD/PRD/UXD sub-sections — required for v1.1+ (or v1.2+)
+
+**Observed:** 2026-04-26, after Krystal directed full expansion of D2R Stage 00 from 5 tracks to 16 hardwired tracks plus 4 applicability-gated tracks. Directive (verbatim): "a hardwire in everything possible. i want this to produce enterprise grade deployment ready production ready high quality apps from discussion through ideate into d2r and we should invest in research everywhere it makes sense to."
+
+The expansion adds production-engineering tracks (Threat Modeling 9, Observability Stack 10, Performance & Scale 11, Deployment Architecture & IaC 12, Data Lifecycle & Privacy 13, Reliability & Resilience 14, Auth & Identity 15, Release Engineering 16) and applicability-gated tracks (Cost & FinOps 17, Internationalization 18, AI/ML Engineering 19, Compliance 20). All 16 are hardwired (always run); 17-20 are explicitly evaluated, not silently skipped — `/ideate-to-d2r-ready` Phase 1 Q9-Q12 forces APPLICABLE-or-NA-with-justification at ideation time and the decision propagates through PRD §6.5/§6.6 + TRD §3.10/§3.11 + TQCD §7.5/§7.6/§10.3/§10.4.
+
+The methodology-layer changes (`repos/.claude/skills/...`) are coherent and enforced via `/ideate-to-d2r-ready` Phase 3 N-way alignment chains. The CDCC plugin layer is silently behind the methodology — a project authored with the new 16+4 track Stage 00 hands CDCC research findings the plan generator doesn't know to read.
+
+This is the same class of methodology-vs-plugin drift documented in Item 5 (UXD) — the methodology evolves at `repos/.claude/skills/`, the plugin remains pinned at the previous methodology level, and projects authored against the newer methodology silently degrade when consumed by the plugin.
+
+**Resolution authored 2026-04-26 in the methodology layer:**
+
+- D2R skill `## Stage 00` section replaced with `## Stage 00: Comprehensive Research (16 Hardwired Tracks + 4 Applicability-Gated Tracks)`. Tracks grouped by theme: Foundational (1-5), Design+UX (6-8), Production Engineering (9-16), Applicability-Gated (17-20). Stage 00 Exit gate audits all 16 + applicability-gate decisions for 17-20.
+- TRD template v02_I (2026-04-26): adds NFR sub-sections operationalizing Tracks 10/11/13/14/16/17/18 outputs; extends §3.3 (Track 9 + 15) and §3.4 (Track 13); adds §6.6 Deployment Architecture & IaC (Track 12) and §6.7 Design System & Frontend Tooling (Track 7).
+- AVD template v02_I (2026-04-26): extends §3.1 Component Inventory with observability (Track 10), auth (Track 15), queue (Track 14), and AI (Track 19) component categories; promotes §5 Deployment Architecture to load-bearing for Track 12 outputs (envs + IaC + secrets + DR).
+- TQCD template v02_I (2026-04-26): adds §3.3 Data Lifecycle & Privacy exit criteria (Track 13); extends §7 Performance & Operational Budgets with reliability/stress (Track 14), cost (Track 17), and i18n (Track 18) gates; extends §8 with §8.4 Auth & Identity gates (Track 15); adds new §10 Operational Acceptance Criteria covering observability (Track 10), release engineering (Track 16), AI/ML (Track 19), and compliance (Track 20).
+- PRD template v02_I (2026-04-26): adds §6.5 Cost Constraints (Track 17 applicability gate) and §6.6 Locale & Language Scope (Track 18 applicability gate).
+- UXD template (cross-references only, no version bump): cross-references Track 7 in §2 and Track 8 in §5.
+- `/ideate-to-d2r-ready` Phase 1 expanded from 8 → 12 questions (Q9 Cost, Q10 Locale, Q11 AI-native, Q12 Regulatory); Phase 3 cross-doc audit extended with N-way alignment chains for security / observability / reliability / data lifecycle / auth / release engineering / performance / deployment / cost / i18n / AI-ML / compliance.
+- `/asae` skill `domain: code` checklist extended with observability instrumentation, performance budget compliance, reliability pattern adherence, auth flow correctness, and release-engineering practice items; `domain: document` checklist extended with compliance audit-readiness for documents in regulated domains.
+
+See: `repos/.claude/skills/dare-to-rise-code-plan/SKILL.md` (16+4 track Stage 00); `repos/.claude/skills/dare-to-rise-code-plan/references/TRD_Template_2026-04-26_v02_I.md`, `AVD_Template_2026-04-26_v02_I.md`, `TQCD_Template_2026-04-26_v02_I.md`, `PRD_Template_2026-04-26_v02_I.md`, `UXD_Template_2026-04-25_v01_I.md` (with Track 7/8 cross-references); `repos/.claude/skills/ideate-to-d2r-ready/SKILL.md` (Q9-Q12 + N-way audit); `repos/.claude/skills/asae/SKILL.md` (extended `domain: code` + `domain: document`).
+
+**Why this needs revisit at v1.1+ (or v1.2+):** the CDCC plugin currently consumes Stage 00 research output as a single research-findings input source pinned at the 5-track Stage 00. With 16+4 tracks, the research-findings volume grows substantially (each track produces its own structured output). Plan generator must learn to read a multi-track research-findings sub-directory; H1 Input Manifest must permit reference design assets directory + research-findings sub-directory; the 5-doc bundle reader (introduced for Item 5) must be extended to read v02_I templates with new sub-sections.
+
+**Options for v1.1+ (or v1.2+) evaluation:**
+
+1. **Extend Bundle Consumer to read multi-track Stage 00 research findings** — primary fix. The Bundle Consumer (Stage 03 library code, in scope from Item 5 work) currently reads a single research-findings input. Extend it to read a research-findings sub-directory containing per-track output files (one file per track) and pass each track's findings to the plan generator with track identity preserved. Track-applicability decisions (17-20) must be readable so the plan generator knows whether to scope downstream stages against those tracks.
+
+2. **Extend Bundle Consumer to read v02_I template instances** — complement to Option 1. The 5-doc bundle reader must parse the new sub-sections in v02_I templates: TRD §§ 3.6-3.11, 6.6, 6.7; AVD §§ 3.1 extended categories, 5.1-5.7; TQCD §§ 3.3, 7.4-7.6, 8.4, 10.1-10.4; PRD §§ 6.5, 6.6. Section presence + applicability-decision values flow into plan-generation context.
+
+3. **Update H1 Input Manifest hook to permit research-findings sub-directory** — H1 currently validates ambient filesystem against `inputManifest`. With 16+4 tracks, `inputManifest` should permit (and the H1 should validate) a `research-findings/` sub-directory containing per-track output files plus the existing reference design assets directory.
+
+4. **Update plan generator to schedule track-aware stages** — when CDCC generates a plan from a v02 bundle, stages must be scoped against the relevant track outputs (e.g., a stage implementing auth must scope against Track 15 outputs landed in TRD §3.3; a stage implementing observability must scope against Track 10 outputs landed in TRD §3.8 + TQCD §10.1). This is a non-trivial plan-generator extension.
+
+5. **Add `cdcc generate` CLI flag for track scope** — for projects where a subset of tracks are NA, allow `cdcc generate --tracks 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16` (always-on) `--applicable-tracks 17,19` (selected applicability-gated tracks) so the CLI can validate the bundle against the declared track scope and refuse generation if the bundle is internally inconsistent.
+
+6. **Update `/asae` `domain: code` checklist parser if CDCC validates against the checklist programmatically** — the extended `domain: code` checklist (observability instrumentation, performance budgets, reliability patterns, auth flow correctness, release engineering practice) may require structured representation if CDCC's H5 Gate Result hook validates against the checklist; the checklist is currently prose, and structured representation may be needed for programmatic enforcement.
+
+**Recommended decision point:** if Item 5 (5-doc bundle support) is targeted for v1.1.0, Item 6 (16+4 track Stage 00 + v02 templates) is the natural v1.2.0 scope — both are coherent methodology-catch-up releases and the v1.1.0 → v1.2.0 increments correspond to the methodology version bumps (UXD added at v1.1.0; 16+4 tracks added at v1.2.0). Alternatively, Item 5 + Item 6 could ship together as a single v1.1.0 release if the engineering effort is acceptable.
+
+The 4 applicability-gated tracks (17-20) are the most novel CDCC integration challenge: silent skips are not permitted (the methodology forces APPLICABLE-or-NA-with-justification), and CDCC's plan generator must respect the applicability decision per project. A project with Track 19 NA should not have AI-eval stages scheduled; a project with Track 19 APPLICABLE must have AI-eval stages scheduled. This is a routing decision the plan generator currently does not make.
+
+**Related:**
+
+- `repos/.claude/skills/dare-to-rise-code-plan/SKILL.md` — D2R skill with 16+4 track Stage 00
+- `repos/.claude/skills/dare-to-rise-code-plan/references/TRD_Template_2026-04-26_v02_I.md` — v02 TRD with Tracks 10/11/13/14/16/17/18 NFRs + Tracks 7/12 in §6
+- `repos/.claude/skills/dare-to-rise-code-plan/references/AVD_Template_2026-04-26_v02_I.md` — v02 AVD with extended component inventory + load-bearing §5
+- `repos/.claude/skills/dare-to-rise-code-plan/references/TQCD_Template_2026-04-26_v02_I.md` — v02 TQCD with new operational acceptance criteria
+- `repos/.claude/skills/dare-to-rise-code-plan/references/PRD_Template_2026-04-26_v02_I.md` — v02 PRD with §6.5 Cost + §6.6 Locale applicability gates
+- `repos/.claude/skills/ideate-to-d2r-ready/SKILL.md` — orchestrator with Q9-Q12 + N-way alignment chains
+- `repos/.claude/skills/asae/SKILL.md` — `/asae` with extended `domain: code` + `domain: document` checklists
+- Item 5 in this backlog — UXD/5-doc bundle precedent
+
+---
+
 ## Maintenance
 
 New public-release concerns get appended as items below. Each item follows the shape: observed + current workaround + why this needs revisit + options + recommended decision point + related.
