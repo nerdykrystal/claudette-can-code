@@ -180,7 +180,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
     // Re-execution without authorization: block
     deps.stderrWrite(JSON.stringify({
       rule: 'h6_step_reexec_unauthorized',
-      resolution: 'Author a gate audit log declaring step_re_execution and place a matching trailer at <plan_dir>/cdcc-step-reexec-authorization.txt',
+      resolution: 'H6 detected a re-execution of a previously completed step without authorization. To allow it: author a gate audit log declaring step_re_execution, then add a matching trailer line to <plan_dir>/cdcc-step-reexec-authorization.txt and retry.',
       step_id: identity.step_id,
       hash_of_inputs: identity.hash_of_inputs,
     }));
@@ -212,7 +212,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(JSON.stringify({ rule: 'h6_handler_error', resolution: 'Check stdin is valid JSON and hook is correctly configured', detail }));
+    deps.stderrWrite(JSON.stringify({ rule: 'h6_handler_error', resolution: 'H6 encountered an unexpected error. Confirm stdin carries a valid JSON PreToolUse payload and that the hook is configured correctly in settings.json.', detail }));
     return { exitCode: 2, audit };
   }
 }

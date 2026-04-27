@@ -73,7 +73,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
         payload: { plan: plan.stages ?? [] },
       };
       await deps.auditLogger.log(audit);
-      deps.stderrWrite(JSON.stringify({ rule: 'h1_no_input_manifest', resolution: 'Add inputManifest to plan stages', detected_value: 'no stages with non-empty inputManifest' }));
+      deps.stderrWrite(JSON.stringify({ rule: 'h1_no_input_manifest', resolution: 'Rule H1 requires at least one plan stage with a non-empty inputManifest. Run `cdcc generate <bundle>` to populate plan-state.json with valid stage definitions.', detected_value: 'no stages with non-empty inputManifest' }));
       return { exitCode: 2, audit };
     }
   } catch (err) {
@@ -87,7 +87,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(JSON.stringify({ rule: 'h1_handler_error', resolution: 'Check plan-state.json is present and valid', detail }));
+    deps.stderrWrite(JSON.stringify({ rule: 'h1_handler_error', resolution: 'H1 could not read plan-state.json. Confirm the file exists at the configured path and contains valid JSON, then re-run `cdcc generate`.', detail }));
     return { exitCode: 2, audit };
   }
 }

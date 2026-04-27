@@ -89,7 +89,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       deps.stderrWrite(
         JSON.stringify({
           rule: 'h8_config_load_error',
-          resolution: 'Ensure protected_files.yaml exists and is valid YAML at the configured path',
+          resolution: 'H8 could not load protected_files.yaml. Confirm the file exists, is readable, and contains valid YAML at the path shown in detail. Fix the file and retry.',
           detail: compileResult.error.message,
           kind: compileResult.error.kind,
         }) + '\n',
@@ -135,7 +135,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       deps.stderrWrite(
         JSON.stringify({
           rule: 'h8_no_persona',
-          resolution: 'Ensure currentPersonaRole is set in the PreToolUse hook payload',
+          resolution: 'H8 requires currentPersonaRole in every PreToolUse payload. The field is absent or empty. Ensure the hook payload includes currentPersonaRole before retrying.',
           detail: 'currentPersonaRole is absent or empty in hook payload',
         }) + '\n',
       );
@@ -178,8 +178,8 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
           path: targetPath,
           persona: currentPersonaRole,
           resolution: matchResult.allowedPersonas.length > 0
-            ? `Re-delegate to one of: ${matchResult.allowedPersonas.join(', ')}`
-            : 'This file is protected and cannot be edited via any assistant persona',
+            ? `H8 REFUSED: protected_files.yaml rule for ${currentPersonaRole} blocks writes to this path. Re-delegate to one of the allowed personas: ${matchResult.allowedPersonas.join(', ')}`
+            : `H8 REFUSED: protected_files.yaml marks this path as write-protected for all personas. To allow access, edit protected_files.yaml to add an allowed_personas entry for the target file, then retry.`,
           deny_message: matchResult.denyMessage,
         }) + '\n',
       );
@@ -220,7 +220,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
     deps.stderrWrite(
       JSON.stringify({
         rule: 'h8_handler_error',
-        resolution: 'Investigate H8 handler error; check plugin logs',
+        resolution: 'H8 encountered an unexpected error. Check plugin logs for the detail below, verify the hook configuration in settings.json, and retry.',
         detail,
       }) + '\n',
     );
@@ -260,7 +260,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   handle().catch((err: unknown) => {
     const detail = err instanceof Error ? err.message : String(err);
     process.stderr.write(
-      JSON.stringify({ rule: 'h8_uncaught', resolution: 'Check H8 hook configuration', detail }) + '\n',
+      JSON.stringify({ rule: 'h8_uncaught', resolution: 'H8 terminated unexpectedly. Inspect the detail below and verify H8 hook configuration in settings.json.', detail }) + '\n',
     );
     process.exit(2);
   });

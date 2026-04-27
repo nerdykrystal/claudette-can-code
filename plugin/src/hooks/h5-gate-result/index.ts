@@ -73,7 +73,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
         payload: { rawPayload: payload.slice(0, 200) },
       };
       await deps.auditLogger.log(audit);
-      deps.stderrWrite(JSON.stringify({ rule: 'h5_parse_error', resolution: 'Provide a valid JSON ConvergenceGateResult on stdin', detected_value: payload.slice(0, 200) }));
+      deps.stderrWrite(JSON.stringify({ rule: 'h5_parse_error', resolution: 'H5 could not parse the ConvergenceGateResult from stdin. Send a well-formed JSON object with fields: converged (bool), counter (int), findings (array).', detected_value: payload.slice(0, 200) }));
       return { exitCode: 2, audit };
     }
 
@@ -89,7 +89,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
         payload: { gateResult },
       };
       await deps.auditLogger.log(audit);
-      deps.stderrWrite(JSON.stringify({ rule: 'h5_schema_invalid', resolution: 'Provide a ConvergenceGateResult with required fields: converged (bool), counter (int), findings (array)', detail: ajv.errorsText(validateGateResult.errors) }));
+      deps.stderrWrite(JSON.stringify({ rule: 'h5_schema_invalid', resolution: 'H5 ConvergenceGateResult failed schema validation. Required fields: converged (bool), counter (int ≥ 0), findings (array of {severity, message}). Correct the errors in detail and resubmit.', detail: ajv.errorsText(validateGateResult.errors) }));
       return { exitCode: 2, audit };
     }
 
@@ -114,7 +114,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       .map((f) => `[${f.severity}] ${f.message}`)
       .join('\n');
 
-    deps.stderrWrite(JSON.stringify({ rule: 'h5_not_converged', resolution: 'Remediate all findings and rerun the convergence gate', findings: findingsSummary }));
+    deps.stderrWrite(JSON.stringify({ rule: 'h5_not_converged', resolution: 'H5 blocked because the stage has not converged. Remediate every finding listed below, then rerun the convergence gate to continue.', findings: findingsSummary }));
 
     const audit: AuditLogEntry = {
       ts,
@@ -138,7 +138,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(JSON.stringify({ rule: 'h5_handler_error', resolution: 'Check stdin is valid and hook is correctly configured', detail }));
+    deps.stderrWrite(JSON.stringify({ rule: 'h5_handler_error', resolution: 'H5 encountered an unexpected error. Verify that stdin carries a valid JSON payload and that the hook is configured correctly in settings.json.', detail }));
     return { exitCode: 2, audit };
   }
 }

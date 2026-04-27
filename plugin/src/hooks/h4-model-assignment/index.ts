@@ -63,21 +63,21 @@ function buildPlanStateErrorStderr(err: PlanStateError): Record<string, unknown>
   if (err.kind === 'not_found') {
     return {
       rule: 'h4_plan_state_missing',
-      resolution: 'Run `cdcc generate <bundle>` to populate plan-state.json',
+      resolution: 'H4 requires plan-state.json to enforce model assignment. Run `cdcc generate <bundle>` to create it, then retry.',
       detected_path: err.path,
     };
   }
   if (err.kind === 'malformed_json') {
     return {
       rule: 'h4_plan_state_malformed',
-      resolution: 'Run `cdcc generate <bundle>` to regenerate plan-state.json',
+      resolution: 'H4 found plan-state.json but could not parse it. Run `cdcc generate <bundle>` to regenerate a valid plan-state.json, then retry.',
       detail: err.message,
     };
   }
   // hmac_missing or hmac_mismatch
   return {
     rule: 'h4_hmac_fail',
-    resolution: 'Run `cdcc rebuild-plan-state` to regenerate plan-state.json with valid HMAC',
+    resolution: 'H4 HMAC verification failed — plan-state.json may have been tampered with or regenerated without a key. Run `cdcc rebuild-plan-state` to recreate plan-state.json with a valid HMAC signature.',
     detail: err.message,
     kind: err.kind,
   };
@@ -114,7 +114,7 @@ async function handleStageNotFound(
   deps.stderrWrite(
     JSON.stringify({
       rule: 'h4_stage_not_found',
-      resolution: 'Run `cdcc generate <bundle>` to populate plan-state.json with current stage',
+      resolution: 'H4 could not locate the current stage in plan-state.json. Run `cdcc generate <bundle>` to repopulate plan-state.json with a valid currentStageId, then retry.',
       detected_stage: currentStageId ?? null,
       available_stages: availableStages,
     }) + '\n',
@@ -152,7 +152,7 @@ async function handleMismatch(
   deps.stderrWrite(
     JSON.stringify({
       rule: 'h4_model_mismatch',
-      resolution: 'Re-route this task via the correct sub-agent for this stage',
+      resolution: 'H4 blocked a Write/Edit because the executing model does not match the stage assignment. Re-delegate this task to the required_model shown below for this stage.',
       required_model: currentStage.assignedModel,
       actual_model: executingModel ?? 'unknown',
       stage_id: currentStage.id,

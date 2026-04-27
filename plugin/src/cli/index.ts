@@ -16,15 +16,15 @@ USAGE
 
 COMMANDS
   generate <planning-dir>
-    Read D2R bundle; write plan.json; install hooks.
-    Options: --force  Overwrite existing plan.json without prompting.
+    Consume a D2R planning bundle, write plan.json, and install hooks.
+    Options: --force  Overwrite an existing plan.json without prompting.
 
   dry-run <planning-dir>
-    Validate bundle + preview plan; no disk writes.
+    Validate a bundle and preview the plan. No files are written.
 
   audit [--since=<ISO8601>]
-    Query the audit log. --since must be a valid ISO 8601 UTC timestamp
-    in the past (e.g. 2026-04-01T00:00:00Z).
+    Query the audit log. --since filters to entries after a given
+    ISO 8601 UTC timestamp in the past (e.g. 2026-04-01T00:00:00Z).
 
   migrate-audit-log [--source=<path>] [--target=<path>] [--resume]
     Migrate JSONL audit logs to sqlite.
@@ -32,13 +32,14 @@ COMMANDS
               target = ~/.claude/cdcc-audit/audit.sqlite.
 
   explain <event_id>
-    Show full audit event and recovery_events markup.
+    Show the full audit record for an event, including any
+    recovery_events markup if present.
 
   rollback <event_id>
-    Revert git commit / working tree per recovery_event.
+    Revert the git commit or working tree recorded in a recovery_event.
 
   config <get|set|list|reset> [key] [value]
-    Manage plugin config at ~/.claude/plugins/cdcc/config.json.
+    Read or write plugin config at ~/.claude/plugins/cdcc/config.json.
     Examples:
       cdcc config get defaults.auditDbPath
       cdcc config set experimental.myFlag true
@@ -49,13 +50,13 @@ COMMANDS
     Show this message.
 
 EXIT CODES
-  0  ok
-  1  usage error
-  2  validation error
-  3  state error (plan/config not found or conflict)
-  4  dependency error
-  5  I/O error
-  6  external tool error
+  0  OK — operation completed successfully
+  1  Usage error — invalid command or missing required argument
+  2  Validation error — argument or input failed schema checks
+  3  State error — plan or config not found, or conflicting state
+  4  Dependency error — required bundle or tool unavailable
+  5  I/O error — filesystem or database operation failed
+  6  External tool error — git or sub-agent returned unexpected result
 `;
 
 // Extract helper functions to reduce main() complexity

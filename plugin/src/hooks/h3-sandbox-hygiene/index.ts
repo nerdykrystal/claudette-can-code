@@ -92,7 +92,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(JSON.stringify({ rule: 'h3_handler_error', resolution: 'Check sandbox marker path is accessible and hook is correctly configured', detail }));
+    deps.stderrWrite(JSON.stringify({ rule: 'h3_handler_error', resolution: 'H3 could not complete the sandbox scan. Verify the sandbox marker path is accessible (check permissions and disk space) and that the hook is configured correctly in settings.json.', detail }));
     return { exitCode: 2, audit };
   }
 }

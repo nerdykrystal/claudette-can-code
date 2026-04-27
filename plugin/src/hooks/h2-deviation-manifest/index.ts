@@ -75,7 +75,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
           payload: { buildComplete: true, hasManifest: false },
         };
         await deps.auditLogger.log(audit);
-        deps.stderrWrite(JSON.stringify({ rule: 'h2_no_deviation_manifest', resolution: 'Provide a deviationManifest field in the BUILD_COMPLETE payload', detected_value: 'BUILD_COMPLETE without deviationManifest' }));
+        deps.stderrWrite(JSON.stringify({ rule: 'h2_no_deviation_manifest', resolution: 'Rule H2 (FR-008) requires a deviationManifest in every BUILD_COMPLETE payload. Add a deviationManifest field listing each substitution (original, replacement, reason) and resubmit.', detected_value: 'BUILD_COMPLETE without deviationManifest' }));
         return { exitCode: 2, audit };
       }
 
@@ -95,7 +95,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
               payload: { manifest },
             };
             await deps.auditLogger.log(audit);
-            deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_schema_invalid', resolution: 'Provide a deviationManifest with required substitutions array (each item: original, replacement, reason)', detail: 'substitutions must be a non-null array' }));
+            deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_schema_invalid', resolution: 'deviationManifest.substitutions must be a non-null array. Each entry requires: original (string), replacement (string), reason (string). Correct the manifest and resubmit.', detail: 'substitutions must be a non-null array' }));
             return { exitCode: 2, audit };
           }
           const valid = validateManifest(manifest);
@@ -110,7 +110,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
               payload: { manifest },
             };
             await deps.auditLogger.log(audit);
-            deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_schema_invalid', resolution: 'Provide a deviationManifest with required substitutions array (each item: original, replacement, reason)', detail: ajv.errorsText(validateManifest.errors) }));
+            deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_schema_invalid', resolution: 'deviationManifest failed schema validation. Each substitution entry requires: original (string), replacement (string), reason (string). Fix the validation errors listed in detail and resubmit.', detail: ajv.errorsText(validateManifest.errors) }));
             return { exitCode: 2, audit };
           }
 
@@ -140,7 +140,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
           payload: { error: detail },
         };
         await deps.auditLogger.log(audit);
-        deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_parse_failed', resolution: 'Ensure deviationManifest value is valid JSON', detail }));
+        deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_parse_failed', resolution: 'H2 found a deviationManifest field but could not parse it as JSON. Ensure the value is well-formed JSON, then resubmit.', detail }));
         return { exitCode: 2, audit };
       }
     }
@@ -167,7 +167,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(JSON.stringify({ rule: 'h2_handler_error', resolution: 'Check stdin is valid and hook is correctly configured', detail }));
+    deps.stderrWrite(JSON.stringify({ rule: 'h2_handler_error', resolution: 'H2 encountered an unexpected error reading stdin. Confirm the hook is receiving well-formed JSON and that it is configured correctly in settings.json.', detail }));
     return { exitCode: 2, audit };
   }
 }

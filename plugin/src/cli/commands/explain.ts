@@ -19,13 +19,14 @@ export interface ExplainOptions {
  * Render a recovery_event payload as human-readable text.
  */
 export function renderRecoveryEvent(ev: RecoveryEvent): string {
+  const recoveryPassLabel = ev.recovery_pass ? 'true (recovered)' : 'false — requires manual review';
   const lines: string[] = [
-    '  Recovery Event',
-    `    stage_id:              ${ev.stage_id}`,
-    `    violation_type:        ${ev.violation_type}`,
-    `    detected_by:           ${ev.detected_by}`,
-    `    revert_target:         ${ev.revert_target}`,
-    `    recovery_pass:         ${String(ev.recovery_pass)}`,
+    '  RECOVERY EVENT',
+    `    stage_id:               ${ev.stage_id}`,
+    `    violation_type:         ${ev.violation_type}`,
+    `    detected_by:            ${ev.detected_by}`,
+    `    revert_target:          ${ev.revert_target}`,
+    `    recovery_pass:          ${recoveryPassLabel}`,
     `    redelegation_spec_diff: ${ev.redelegation_spec_diff}`,
   ];
   return lines.join('\n');
@@ -49,12 +50,12 @@ function renderPayload(payloadJson: string): string {
           return renderRecoveryEvent(parsed as RecoveryEvent);
         }
         // Partially valid: show validation errors + raw
-        return `  [recovery_event] Validation errors:\n${errors.map((e) => `    - ${e}`).join('\n')}\n  Raw:\n    ${JSON.stringify(parsed, null, 4).split('\n').join('\n    ')}`;
+        return `  [RECOVERY EVENT — partial validation errors]\n${errors.map((e) => `    - ${e}`).join('\n')}\n  Raw:\n    ${JSON.stringify(parsed, null, 4).split('\n').join('\n    ')}`;
       }
     }
     return `  ${JSON.stringify(parsed, null, 2).split('\n').join('\n  ')}`;
   } catch {
-    return `  (unparseable payload) ${payloadJson}`;
+    return `  (payload could not be parsed as JSON) ${payloadJson}`;
   }
 }
 
@@ -114,11 +115,11 @@ export async function handleExplain(
     return 3;
   }
 
-  console.log(`Event #${foundRow.id}`);
-  console.log(`  ts:            ${foundRow.ts}`);
+  console.log(`Audit Event #${foundRow.id}`);
+  console.log(`  timestamp:     ${foundRow.ts}`);
   console.log(`  event_kind:    ${foundRow.event_kind}`);
-  console.log(`  redaction_cnt: ${foundRow.redaction_count}`);
-  console.log(`  hmac_sig:      ${foundRow.hmac_sig ?? '(none)'}`);
+  console.log(`  redacted_fields: ${foundRow.redaction_count}`);
+  console.log(`  hmac_sig:      ${foundRow.hmac_sig ?? '(none — HMAC not recorded)'}`);
   console.log('  payload:');
   console.log(renderPayload(foundRow.payload_json));
 

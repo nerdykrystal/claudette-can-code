@@ -77,7 +77,7 @@ export async function handleImpl(deps: H9Deps): Promise<H9Result> {
       violations: result.violations,
       emitted_events: emittedEvents,
       resolution:
-        'Parent assistant turn must run `git revert --no-edit <sha>` (hex revert_target case) OR `git restore .` / `git checkout -- .` (working_tree_state case), then re-delegate via Agent tool. Per Q7-lock: one-shot only; second violation surfaces recovery_pass:false to user.',
+        'H9 detected violations and emitted recovery_events audit rows. The parent assistant turn must now: (1) run `git revert --no-edit <sha>` if revert_target is a hex SHA, or `git restore .` / `git checkout -- .` if revert_target is "working_tree_state"; (2) re-delegate the stage via Agent tool with the updated spec. Per Q7-lock: one retry only — a second violation sets recovery_pass:false and surfaces to the user.',
     }) + '\n',
   );
 
@@ -125,7 +125,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     process.stderr.write(
       JSON.stringify({
         rule: 'h9_uncaught',
-        resolution: 'Check H9 hook configuration',
+        resolution: 'H9 terminated unexpectedly. Inspect the detail below and verify H9 hook configuration in settings.json.',
         detail,
       }) + '\n',
     );
