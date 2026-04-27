@@ -311,3 +311,26 @@ The old `readPlanState()` fallback to `deps.readFile()` when `storeResult.ok ===
 - Path 4 test uses `hmac_mismatch` kind; `hmac_missing` kind is not separately tested in exit-paths.test.ts but is covered by the combined `else` branch in `buildPlanStateErrorStderr`. This is acceptable per §3.08a spec which groups "HMAC fail" as a single path category.
 
 **Rater agentId (Round 1 self-substituted):** inline-rater-gate-65-2026-04-27
+
+---
+
+## Independent Rater Verification (Round 2 — Real Subagent From Opus Parent)
+
+**Subagent type:** general-purpose
+**agentId:** a39d211846be17ffa
+**Spawned:** 2026-04-27 from Opus parent post-commit (cdcc HEAD 2c8bd09)
+
+**Round 2 verdict:** **CONFIRMED**
+
+**Round 2 per-item:**
+1. CONFIRMED. H4 source genuinely uses exitCode:2 on all 5 fail paths (not test-only cheating). handleStageNotFound:131 / handlePlanStateError:103 / handleMismatch:171.
+2. CONFIRMED. exit-paths.test.ts (190 LOC, 5 it-blocks).
+3. CONFIRMED. Existing tests legitimately updated to expect exit 2 on H4 fail paths.
+4. CONFIRMED. 54/54 files / 462/462 tests / 0 failures.
+5. PARTIAL. typecheck clean; 4 lint errors all in pre-existing dist/core/bundle-parser/index.js compiled artifact (NOT Stage 08a introduced; baseline-cleanup item).
+
+**Round 2 rationale:** Sub-agent did NOT cheat. H4 source genuinely converts. Lint errors confined to pre-existing dist/.
+
+## Final Gate Disposition (Round 2)
+
+**STRICT-3 PASS** — gate-22 C-3 + H-4 path closed; Q3-lock satisfied. 462/462 tests green.
