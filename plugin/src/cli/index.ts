@@ -7,22 +7,55 @@ import { pathToFileURL } from 'node:url';
 import { realpathSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { createInterface } from 'node:readline';
+import { parseSinceArg, parseKeyValueArg, parseFlag } from './helpers/args.js';
 
-const USAGE = `cdcc — Claudette Can Code (Pro) Plugin MVP
+const USAGE = `cdcc — Claudette Can Code (Pro) v1.1.0
 
-Usage:
-  cdcc generate <planning-dir>                   Read 4-doc bundle; write plan.json; install hooks
-  cdcc dry-run  <planning-dir>                   Validate bundle + preview plan; no disk writes
-  cdcc audit   [--since=ISO8601]                 Query audit log
-  cdcc migrate-audit-log [--source=<path>]       Migrate JSONL audit logs to sqlite
-                         [--target=<path>]
-                         [--resume]
-  cdcc explain <event_id>                        Show full audit event + recovery_events markup
-  cdcc rollback <event_id>                       Revert git commit / working tree per recovery_event
-  cdcc config <get|set|list|reset> [key] [val]  Manage plugin config (~/.claude/plugins/cdcc/)
-  cdcc --help                                    Show this message
+USAGE
+  cdcc <command> [options]
 
-Exit codes: 0=ok, 1=usage, 2=validation, 3=state, 4=dependency, 5=I/O, 6=external
+COMMANDS
+  generate <planning-dir>
+    Read D2R bundle; write plan.json; install hooks.
+    Options: --force  Overwrite existing plan.json without prompting.
+
+  dry-run <planning-dir>
+    Validate bundle + preview plan; no disk writes.
+
+  audit [--since=<ISO8601>]
+    Query the audit log. --since must be a valid ISO 8601 UTC timestamp
+    in the past (e.g. 2026-04-01T00:00:00Z).
+
+  migrate-audit-log [--source=<path>] [--target=<path>] [--resume]
+    Migrate JSONL audit logs to sqlite.
+    Defaults: source = ~/.claude/cdcc-audit/*.jsonl,
+              target = ~/.claude/cdcc-audit/audit.sqlite.
+
+  explain <event_id>
+    Show full audit event and recovery_events markup.
+
+  rollback <event_id>
+    Revert git commit / working tree per recovery_event.
+
+  config <get|set|list|reset> [key] [value]
+    Manage plugin config at ~/.claude/plugins/cdcc/config.json.
+    Examples:
+      cdcc config get defaults.auditDbPath
+      cdcc config set experimental.myFlag true
+      cdcc config list
+      cdcc config reset
+
+  --help, -h
+    Show this message.
+
+EXIT CODES
+  0  ok
+  1  usage error
+  2  validation error
+  3  state error (plan/config not found or conflict)
+  4  dependency error
+  5  I/O error
+  6  external tool error
 `;
 
 // Extract helper functions to reduce main() complexity
@@ -89,6 +122,9 @@ async function handleGenerate(
 
   const planPath = resolve('plan.json');
 
+  // M-5 closure: use parseFlag helper for --force detection
+  const forceFlag = parseFlag(args, 'force');
+
   // L-5 closure: overwrite-confirm prompt when plan.json already exists (non-interactive skips)
   if (existsSync(planPath) && process.stdin.isTTY) {
     const confirmed = await confirmOverwrite(planPath);
@@ -96,9 +132,9 @@ async function handleGenerate(
       console.log(JSON.stringify({ ok: false, message: `Aborted: plan.json already exists at ${planPath}. Re-run with --force to overwrite.` }));
       return 0;
     }
-  } else if (existsSync(planPath) && args.includes('--force')) {
+  } else if (existsSync(planPath) && forceFlag) {
     // --force flag skips prompt in non-TTY / scripted contexts
-  } else if (existsSync(planPath) && !process.stdin.isTTY && !args.includes('--force')) {
+  } else if (existsSync(planPath) && !process.stdin.isTTY && !forceFlag) {
     console.error(JSON.stringify({ error: `plan.json already exists at ${planPath}. Use --force to overwrite.` }));
     return 3;
   }
@@ -159,11 +195,18 @@ async function handleAudit(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   AuditLogger: any,
 ): Promise<number> {
+  // M-5 closure: use parseKeyValueArg helper instead of inline startsWith loop
+  const sinceRaw = parseKeyValueArg(args, 'since');
+
+  // M-4 closure: validate --since as ISO 8601 + reject future timestamps
   let since: string | undefined;
-  for (const arg of args) {
-    if (arg.startsWith('--since=')) {
-      since = arg.slice('--since='.length);
+  if (sinceRaw !== undefined) {
+    const parseResult = parseSinceArg(sinceRaw);
+    if (!parseResult.ok) {
+      console.error(JSON.stringify({ error: parseResult.error.message, kind: parseResult.error.kind }));
+      return 2;
     }
+    since = parseResult.value.toISOString();
   }
 
   const auditLogger = new AuditLogger(join(claudeRoot, 'cdcc-audit'));
@@ -186,15 +229,10 @@ async function handleMigrateAuditLog(
   const fg = await import('fast-glob');
   const { join: pathJoin, resolve: pathResolve } = await import('node:path');
 
-  let sourcePath: string | undefined;
-  let targetPath: string | undefined;
-  let resume = false;
-
-  for (const arg of args) {
-    if (arg.startsWith('--source=')) sourcePath = arg.slice('--source='.length);
-    else if (arg.startsWith('--target=')) targetPath = arg.slice('--target='.length);
-    else if (arg === '--resume') resume = true;
-  }
+  // M-5 closure: use arg-parsing helpers instead of inline for-loop
+  const sourcePath = parseKeyValueArg(args, 'source');
+  const targetPath = parseKeyValueArg(args, 'target');
+  const resume = parseFlag(args, 'resume');
 
   const auditDir = pathJoin(claudeRoot, 'cdcc-audit');
   const defaultTarget = pathJoin(auditDir, 'audit.sqlite');

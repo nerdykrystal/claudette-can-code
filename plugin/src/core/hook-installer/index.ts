@@ -26,6 +26,8 @@ export type { PluginJsonError } from './plugin-json-reader.js';
 export interface InstalledHooks {
   hooks: PluginJsonHookEntry[];
   settingsJsonHash: string;
+  /** M-6: IDs of hooks that already existed in settings.json before this install. */
+  conflictingIds: string[];
 }
 
 export type InstallError =
@@ -161,14 +163,21 @@ function makeAtomicWriteError(settingsJsonPath: string, cause: string): AtomicWr
  * installAllHooks: read hooks from plugin.json and install into settings.json.
  * This is the Stage 07 primary API — closes H-3 systemic (no hardcoded list).
  *
- * @param opts.pluginJsonPath - Path to plugin.json (single source of truth)
+ * M-6 closure: if forceOverwrite=false (default) and existing hook IDs are found,
+ * the install still proceeds (idempotent merge) but conflictingIds is populated
+ * in the result so callers can warn the user. Pass forceOverwrite=true to suppress
+ * the conflict list (e.g. when --force CLI flag is provided).
+ *
+ * @param opts.pluginJsonPath   - Path to plugin.json (single source of truth)
  * @param opts.settingsJsonPath - Path to settings.json to merge hooks into
+ * @param opts.forceOverwrite   - If true, do not report conflicting IDs (default: false)
  */
 export async function installAllHooks(opts: {
   pluginJsonPath: string;
   settingsJsonPath: string;
+  forceOverwrite?: boolean;
 }): Promise<Result<InstalledHooks, InstallError>> {
-  const { pluginJsonPath, settingsJsonPath } = opts;
+  const { pluginJsonPath, settingsJsonPath, forceOverwrite = false } = opts;
 
   // Step 1: Read hooks from plugin.json (single source of truth)
   const hooksResult = readPluginHooks(pluginJsonPath);
@@ -188,16 +197,38 @@ export async function installAllHooks(opts: {
   let release: (() => Promise<void>) | undefined;
   try {
     release = await acquireLock(settingsJsonPath);
-    return await _doInstallAllHooks(settingsJsonPath, hooks);
+    return await _doInstallAllHooks(settingsJsonPath, hooks, forceOverwrite);
   } finally {
     if (release) await release();
   }
+}
+
+/**
+ * M-6 closure: Collect IDs from `hooks` that already exist in `hooksRecord`.
+ * Extracted from _doInstallAllHooks to reduce cyclomatic complexity.
+ */
+function _collectConflictingIds(
+  hooksRecord: Record<string, unknown>,
+  hooks: PluginJsonHookEntry[],
+): string[] {
+  const conflicting: string[] = [];
+  for (const entry of hooks) {
+    const eventArr = hooksRecord[entry.event];
+    if (Array.isArray(eventArr)) {
+      const existingIds = new Set(eventArr.map((h: unknown) => (h as Record<string, unknown>)?.id));
+      if (existingIds.has(entry.id)) {
+        conflicting.push(entry.id);
+      }
+    }
+  }
+  return conflicting;
 }
 
 /** Inner logic of installAllHooks (extracted to reduce complexity of outer fn). */
 async function _doInstallAllHooks(
   settingsJsonPath: string,
   hooks: PluginJsonHookEntry[],
+  forceOverwrite: boolean,
 ): Promise<Result<InstalledHooks, InstallError>> {
   // Read existing settings
   let settings: Record<string, unknown>;
@@ -217,6 +248,11 @@ async function _doInstallAllHooks(
     settings.hooks = {};
   }
   const hooksRecord = settings.hooks as Record<string, unknown>;
+
+  // M-6 closure: detect IDs that already exist in settings.json before merge.
+  // Report them in result.conflictingIds so callers can warn the user.
+  // If forceOverwrite=true, suppress detection (e.g. --force CLI flag provided).
+  const conflictingIds = forceOverwrite ? [] : _collectConflictingIds(hooksRecord, hooks);
 
   // Merge entries by event (idempotent by id)
   for (const entry of hooks) {
@@ -240,5 +276,5 @@ async function _doInstallAllHooks(
     };
   }
 
-  return { ok: true, value: { hooks, settingsJsonHash } };
+  return { ok: true, value: { hooks, settingsJsonHash, conflictingIds } };
 }

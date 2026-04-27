@@ -1,6 +1,6 @@
 {
   "name": "cdcc",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "description": "Non-bypassable D2R plan enforcement for Claude Code",
   "commands": [
     {

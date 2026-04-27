@@ -1,11 +1,13 @@
 // Unit tests for SQLiteAuditStore — Stage 05.
 // Test cases per §3.05: appendEvent round-trip, WAL pragma, synchronous=FULL, HMAC sig, redaction.
+// Updated Stage 14: redaction default-OFF (M-7). Tests that require redaction pass DEFAULT_RULES explicitly.
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { SQLiteAuditStore } from '../../../src/core/audit/sqlite-store.js';
+import { DEFAULT_RULES } from '../../../src/core/audit/redaction.js';
 
 describe('SQLiteAuditStore', () => {
   let tmpDir: string;
@@ -134,12 +136,17 @@ describe('SQLiteAuditStore', () => {
     expect(events[0].redaction_count).toBe(0);
   });
 
-  it('redaction_count > 0 for payloads with API keys', () => {
-    store.appendEvent('test', { key: 'sk-abcdefghijklmnopqrstu' });
-    const events = [...store.queryEvents()];
+  it('redaction_count > 0 for payloads with API keys when DEFAULT_RULES explicitly provided (M-7 opt-in)', () => {
+    // M-7 closure: redaction is default-OFF. Must opt in by passing DEFAULT_RULES explicitly.
+    // Use a separate db file to avoid conflict with the default store open on dbPath.
+    const redactDbPath = join(tmpDir, 'audit-redact.sqlite');
+    const storeWithRedaction = new SQLiteAuditStore({ dbPath: redactDbPath, redactionRules: DEFAULT_RULES });
+    storeWithRedaction.appendEvent('test', { key: 'sk-abcdefghijklmnopqrstu' });
+    const events = [...storeWithRedaction.queryEvents()];
     expect(events[0].redaction_count).toBeGreaterThan(0);
     const parsed = JSON.parse(events[0].payload_json) as { key: string };
     expect(parsed.key).toContain('[REDACTED:api_key]');
+    storeWithRedaction.close();
   });
 
   it('checkpointWal completes without error', () => {

@@ -67,20 +67,20 @@ describe('CLI E2E Tests', () => {
     it('should display help with --help flag', async () => {
       const result = await runCLI(['--help']);
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain('Usage:');
+      expect(result.stdout).toContain('USAGE');
       expect(result.stdout).toContain('cdcc — Claudette Can Code');
     });
 
     it('should display help with -h flag', async () => {
       const result = await runCLI(['-h']);
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain('Usage:');
+      expect(result.stdout).toContain('USAGE');
     });
 
     it('should display help with help command', async () => {
       const result = await runCLI(['help']);
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain('Usage:');
+      expect(result.stdout).toContain('USAGE');
     });
   });
 

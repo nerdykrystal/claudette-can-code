@@ -7,7 +7,7 @@ import { mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { Result } from '../types/index.js';
 import { SCHEMA_DDL, PRAGMAS } from './schema.js';
-import { redactPayload, type RedactionRule, DEFAULT_RULES } from './redaction.js';
+import { redactPayload, type RedactionRule } from './redaction.js';
 
 export type AuditWriteError =
   | { kind: 'lockfile_busy'; message: string }
@@ -30,6 +30,11 @@ export interface AuditEvent {
 export interface SQLiteStoreOptions {
   dbPath: string;
   hmacKey?: Buffer;
+  /**
+   * M-7 closure: Redaction is default-OFF. Pass an explicit redactionRules array
+   * (including DEFAULT_RULES if desired) to opt in to redaction at emission time.
+   * When undefined or empty array, no redaction is applied (redactionCount=0 for all writes).
+   */
   redactionRules?: RedactionRule[];
 }
 
@@ -82,7 +87,9 @@ export class SQLiteAuditStore {
       const ts_utc_month = tsDate.getUTCMonth() + 1;
       const ts_utc_day = tsDate.getUTCDate();
 
-      const rules = this.opts.redactionRules ?? DEFAULT_RULES;
+      // M-7 closure: redaction is default-OFF. Only apply rules when explicitly provided.
+      // Without redactionRules in opts, redactionCount=0 for all writes (no-op redactPayload call).
+      const rules = this.opts.redactionRules ?? [];
       const { redacted, redactionCount } = redactPayload(payload, rules);
       const payloadJson = JSON.stringify(redacted);
 
