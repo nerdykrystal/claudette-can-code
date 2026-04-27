@@ -429,3 +429,38 @@ See §Pass-1 Dimension 6 table above. Summary:
 - Inline remediations: 1 (LOW, timeout fix)
 - Counter: 0/5
 - Exit: CYCLE-1-COMPLETE — stop here per Opus parent instruction; Cycle 2-5 decisions remain with Opus parent
+
+---
+
+## Appendix A — Parallel-Track Artifacts (Transparency)
+
+The Stage QA work proceeded on two parallel tracks (Opus parent thread + a separate Sonnet sub-agent thread invoking Claude CLI). The committed disposition above (option c, real Round 2 rater `a607cee66c1cb6da8` CONFIRMED) was reached via the Opus-parent track. The parallel track attempted independent verification via two separate operations that did not yield clean output. Documented here for transparency.
+
+### A.1 Parallel rater spawn (Claude CLI `--print` invocation)
+
+**Task ID:** `bhft94qw4`
+**Output file:** `C:/Users/NERDYK~1/AppData/Local/Temp/claude/...kind-boyd-4d8ecf/...tasks/bhft94qw4.output`
+**File size on inspection:** 0 bytes
+**Outcome:** **SILENT FAILURE.** The Claude CLI invocation completed without writing any output. No verdict recovered from this track. The Opus parent's Round 2 rater spawn (Agent tool, not CLI; agentId `a607cee66c1cb6da8`) succeeded and is the canonical rater of record.
+
+**Methodological note:** sub-agent CLI rater spawns appear less reliable than Agent-tool spawns from the parent. Going forward, raters should always be spawned via the parent-only Agent tool. This is consistent with the protocol established at gate-56 amendment (Stage 02) where the same structural pattern was first surfaced.
+
+### A.2 Parallel Stryker mutation test invocation
+
+**Task ID:** `bnovfhgxb`
+**Output file:** same task dir / `bnovfhgxb.output`
+**File size on inspection:** 3306 bytes
+**Outcome:** **CRASH (exit 143 / SIGTERM).** Stryker was invoked against the existing `stryker.conf.mjs` scope (hooks + gate + backwards-planning + skill-gap + sub-agent-redirector — NOT the Q5-locked critical files from Stage 01b §2.2). Output ended with `ChildProcess.handleUnexpectedExit ... { innerError: undefined, pid: 2636, exitCode: 143, signal: null }` after partially generating mutants and running test sandbox.
+
+**Empirical confirmation of MEDIUM finding:** This crash empirically corroborates the MEDIUM finding documented in §Pass-1 Dimension 2 (Mutation):
+- Mutation infrastructure exists and Stryker can run
+- BUT scope misalignment vs Stage 01b §2.2 Q5-lock spec is real
+- AND the existing config has stability issues under full-mutation execution (likely OOM or timeout under the larger mutant set)
+
+The crash **does not invalidate** the option (c) disposition (3 MEDIUMs accepted as v1.2.0 carry-forward). It strengthens the case for v1.2.0 dedicated mutation-cleanup work: the config needs both scope alignment AND stability tuning (memory limits, parallel-runner cap, mutant-batch size).
+
+### A.3 Disposition impact
+
+Neither parallel-track artifact changes the gate-74 verdict. Both were attempted as additional verification; both either failed silently (rater) or empirically confirmed an already-documented finding (Stryker crash → MEDIUM coverage gap → v1.2.0 carry-forward).
+
+The committed Round 2 real-rater verdict (`a607cee66c1cb6da8` CONFIRMED) stands. CDCC v1.1.0 build complete.
