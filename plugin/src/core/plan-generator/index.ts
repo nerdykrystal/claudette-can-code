@@ -3,104 +3,116 @@ import Ajv from 'ajv';
 import { Result, Plan, ModelAssignment, EffortLevel, SpecDepth, GateDomain } from '../types/index.js';
 import { planSchema } from '../types/schemas.js';
 import type { Bundle } from '../bundle/index.js';
+import type { BundleAST } from '../bundle-parser/types.js';
 import type { YourSetupCatalog } from '../catalog/index.js';
-import { planBackwards, type ExcellenceSpec } from '../backwards-planning/index.js';
+import { extractExcellenceSpec, type ExcellenceSpec } from '../plan-generator/excellence-spec.js';
+import { planStages, type StagePlan } from '../backwards-planning/index.js';
 import { check } from '../skill-gap/index.js';
+import { runGate, type GateScope, type Auditor } from '../gate/index.js';
 
 export interface GenerateInput {
   bundle: Bundle;
+  bundleAST?: BundleAST;
   catalog: YourSetupCatalog;
   now?: () => Date;
 }
 
 export interface GenerateError {
-  code: 'SKILL_GAP' | 'SCHEMA_INVALID';
+  code: 'SKILL_GAP' | 'SCHEMA_INVALID' | 'EXCELLENCE_SPEC_INVALID';
   detail: string;
   gaps?: { stageId: string; missingSkill: string }[];
 }
 
-function extractExcellenceSpec(): ExcellenceSpec {
-  // Heuristic: pull excellence end state from TQCD, then AVD section 2.1
-  // For MVP, derive from available content
-  const excellentEndState =
-    'An installable Claude Code plugin that enforces D2R plan adherence via non-bypassable hooks';
-
-  // Extract QA criteria: first 5 items (or all if fewer)
-  const qaCriteria = [
-    'All FR-001…FR-019 have functional tests',
-    'All BR-001…BR-006 have behavioral tests',
-    'Hook enforcement exits non-zero on violation',
-    'Audit logs are append-only and fsync\'d',
-    '100% line + branch coverage on testable surface',
-  ];
-
-  // Extract constraints from TRD 6.2 (for MVP, use reasonable defaults)
-  const constraints = [
-    'No silent substitution (F3) possible',
-    'No skill-skipping (F6) possible',
-    'Gate-skipping (F6) structurally impossible',
-    'All enforcement non-bypassable',
-    'Zero network calls at runtime',
-  ];
-
-  return { excellentEndState, qaCriteria, constraints };
-}
 
 function sha256(content: string): string {
   return createHash('sha256').update(content).digest('hex');
 }
 
 export async function generate(input: GenerateInput): Promise<Result<Plan, GenerateError>> {
-  const { bundle, catalog, now = () => new Date() } = input;
+  const { bundle, bundleAST, catalog, now = () => new Date() } = input;
 
-  // Extract excellence spec
-  const spec = extractExcellenceSpec();
+  // Extract excellence spec from bundle AST (bundle-derived, not hardcoded)
+  if (!bundleAST) {
+    return {
+      ok: false,
+      error: {
+        code: 'EXCELLENCE_SPEC_INVALID',
+        detail: 'BundleAST required to extract excellence spec',
+      },
+    };
+  }
 
-  // Plan backwards
-  const plannedStages = planBackwards(spec);
+  const specResult = extractExcellenceSpec(bundleAST);
+  if (!specResult.ok) {
+    return {
+      ok: false,
+      error: {
+        code: 'EXCELLENCE_SPEC_INVALID',
+        detail: `Failed to extract excellence spec: ${specResult.error.message}`,
+      },
+    };
+  }
+
+  const spec: ExcellenceSpec = specResult.value;
+
+  // Plan backwards from excellence spec
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const planStagesResult: Result<StagePlan[], any> = planStages(bundleAST, spec);
+  if (!planStagesResult.ok) {
+    return {
+      ok: false,
+      error: {
+        code: 'SCHEMA_INVALID',
+        detail: `Failed to plan stages: ${planStagesResult.error.message}`,
+      },
+    };
+  }
+
+  const plannedStages = planStagesResult.value;
 
   // D2R model/effort/depth/gate defaults per stage naming
   const modelMap: Record<string, ModelAssignment> = {
-    'plan-skeleton': 'opus-4-7',
-    'plan-full': 'opus-4-7',
-    scaffold: 'sonnet-4-6',
-    impl: 'haiku-4-5',
-    qa: 'opus-4-7',
+    'stage-1': 'haiku-4-5',
+    'stage-2': 'haiku-4-5',
+    'stage-3': 'haiku-4-5',
+    'stage-4': 'haiku-4-5',
+    'stage-5': 'haiku-4-5',
+    'qa': 'opus-4-7',
   };
 
   const effortMap: Record<string, EffortLevel> = {
-    'plan-skeleton': 'low',
-    'plan-full': 'medium',
-    scaffold: 'medium',
-    impl: 'medium',
-    qa: 'high',
+    'stage-1': 'medium',
+    'stage-2': 'medium',
+    'stage-3': 'medium',
+    'stage-4': 'medium',
+    'stage-5': 'medium',
+    'qa': 'high',
   };
 
   const depthMap: Record<string, SpecDepth> = {
-    'plan-skeleton': 'Shallow',
-    'plan-full': 'Medium',
-    scaffold: 'Medium',
-    impl: 'Deep',
-    qa: 'Deep',
+    'stage-1': 'Deep',
+    'stage-2': 'Deep',
+    'stage-3': 'Deep',
+    'stage-4': 'Deep',
+    'stage-5': 'Deep',
+    'qa': 'Deep',
   };
 
   const gateThresholdMap: Record<string, number> = {
-    'plan-skeleton': 2,
-    'plan-full': 3,
-    scaffold: 3,
-    impl: 3,
-    qa: 5,
+    'stage-1': 3,
+    'stage-2': 3,
+    'stage-3': 3,
+    'stage-4': 3,
+    'stage-5': 3,
+    'qa': 5,
   };
 
   const stagesWithDefaults = plannedStages.map((stage) => {
-    let stageType = 'impl';
-    if (stage.id === 'qa') stageType = 'qa';
-    else if (stage.id === 'scaffold') stageType = 'scaffold';
-    else if (stage.id.includes('plan')) stageType = stage.id;
+    const stageType = stage.stageId;
 
     return {
-      id: stage.id,
-      name: stage.name,
+      id: stage.stageId,
+      name: `Stage ${stage.stageId}`,
       assignedModel: (modelMap[stageType] || 'haiku-4-5') as ModelAssignment,
       effortLevel: (effortMap[stageType] || 'medium') as EffortLevel,
       specDepth: (depthMap[stageType] || 'Deep') as SpecDepth,
@@ -109,8 +121,10 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
         severityPolicy: 'standard' as const,
         domain: 'code' as GateDomain,
       },
-      inputManifest: [],
+      inputManifest: stage.inputs,
       skillInvocations: [],
+      exitCriteriaIds: stage.exitCriteriaIds,
+      closes: stage.closes,
     };
   });
 
@@ -171,6 +185,52 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
         code: 'SKILL_GAP',
         detail: `Skill gaps detected in plan`,
         gaps: gapResult.error,
+      },
+    };
+  }
+
+  // Wire gate evaluation: verify all exit criteria are covered by stage plans
+  const gateAuditor: Auditor = async (_scope, _iteration) => {
+    const findings = [];
+
+    // Verify all exit criteria covered by some stage's exitCriteriaIds
+    const coveredCriteria = new Set<string>();
+    for (const stage of plannedStages) {
+      for (const id of stage.exitCriteriaIds) {
+        coveredCriteria.add(id);
+      }
+    }
+
+    for (const ec of spec.exitCriteria) {
+      if (!coveredCriteria.has(ec.id)) {
+        findings.push({
+          severity: 'CRITICAL' as const,
+          message: `Exit criterion ${ec.id} (${ec.metric}) not covered by any stage plan`,
+          source: 'plan-generator-gate',
+        });
+      }
+    }
+
+    return findings;
+  };
+
+  const gateScope: GateScope = {
+    target: plan.id,
+    sources: [bundleAST.rootDir],
+    prompt: `Verify plan ${plan.id} covers all excellence spec exit criteria`,
+    domain: 'code',
+    threshold: 3,
+    severityPolicy: 'strict',
+    maxIterations: 1,
+  };
+
+  const gateResult = await runGate(gateScope, gateAuditor);
+  if (!gateResult.converged) {
+    return {
+      ok: false,
+      error: {
+        code: 'SCHEMA_INVALID',
+        detail: `Plan gate evaluation failed: ${gateResult.findings.map((f) => f.message).join('; ')}`,
       },
     };
   }
