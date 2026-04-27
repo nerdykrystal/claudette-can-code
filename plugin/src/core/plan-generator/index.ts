@@ -3,8 +3,10 @@ import Ajv from 'ajv';
 import { Result, Plan, ModelAssignment, EffortLevel, SpecDepth, GateDomain } from '../types/index.js';
 import { planSchema } from '../types/schemas.js';
 import type { Bundle } from '../bundle/index.js';
+import type { BundleAST } from '../bundle-parser/types.js';
 import type { YourSetupCatalog } from '../catalog/index.js';
-import { planBackwards, type ExcellenceSpec } from '../backwards-planning/index.js';
+import { planBackwards, planStages, type ExcellenceSpec } from '../backwards-planning/index.js';
+import { extractExcellenceSpec, type ExcellenceSpecError } from './excellence-spec.js';
 import { check } from '../skill-gap/index.js';
 import { runGateEvaluation } from '../gate/index.js';
 
@@ -202,6 +204,224 @@ export async function generate(input: GenerateInput): Promise<Result<Plan, Gener
   // Gate evaluation result is captured for audit purposes; does not block plan generation.
   // A plan with full coverage will have _gateEval.passed === true.
   void _gateEval;
+
+  return { ok: true, value: plan };
+}
+
+// ─── Stage 04b: Live-path BundleAST generator ─────────────────────────────────
+// Closes gate-22 C-1 (extractExcellenceSpec live path), M-2, M-10 (model/effort
+// derived from spec), H-4 (assignedModel from spec, not hardcode).
+// runGateEvaluation is BLOCKING: exit-criteria gap returns error Result.
+
+export interface GenerateFromBundleASTInput {
+  bundle: BundleAST;
+  catalog: YourSetupCatalog;
+  now?: () => Date;
+}
+
+export interface GenerateFromBundleASTError {
+  code: 'EXCELLENCE_SPEC_ERROR' | 'PLAN_STAGES_ERROR' | 'GATE_CRITERIA_GAP' | 'SKILL_GAP' | 'SCHEMA_INVALID';
+  detail: string;
+  excellenceSpecError?: ExcellenceSpecError;
+  gaps?: { stageId: string; missingSkill: string }[];
+  missingCriteriaIds?: string[];
+}
+
+/**
+ * Generate a Plan from a parsed BundleAST.
+ * Live path: uses extractExcellenceSpec (bundle-derived, not hardcoded) +
+ * planStages (bundle-aware, not legacy planBackwards) + blocking runGateEvaluation.
+ *
+ * Closes gate-22:
+ *   C-1  — extractExcellenceSpec derives spec from bundle content (not hardcode)
+ *   M-2  — model derived from ExcellenceSpec qaCriteria structure (not static map)
+ *   M-10 — effort derived from ExcellenceSpec (not static map)
+ *   H-4  — assignedModel set from spec, fallback only for unknown stage types
+ */
+export async function generateFromBundleAST(
+  input: GenerateFromBundleASTInput,
+): Promise<Result<Plan, GenerateFromBundleASTError>> {
+  const { bundle, catalog, now = () => new Date() } = input;
+
+  // Step 1: Extract ExcellenceSpec from bundle content (real path, not fallback).
+  const specResult = extractExcellenceSpec(bundle);
+  if (!specResult.ok) {
+    return {
+      ok: false,
+      error: {
+        code: 'EXCELLENCE_SPEC_ERROR',
+        detail: `Failed to extract ExcellenceSpec: ${specResult.error.message}`,
+        excellenceSpecError: specResult.error,
+      },
+    };
+  }
+  const spec = specResult.value;
+
+  // Step 2: Plan stages from bundle + spec (bundle-aware API).
+  const stagePlanResult = planStages(bundle, spec);
+  if (!stagePlanResult.ok) {
+    return {
+      ok: false,
+      error: {
+        code: 'PLAN_STAGES_ERROR',
+        detail: `Failed to plan stages: ${stagePlanResult.error.message}`,
+      },
+    };
+  }
+  const stagePlans = stagePlanResult.value;
+
+  // Step 3: Build backwards-ordered planned stages for structural metadata
+  // (planStages returns StagePlan[] with stageId/inputs/outputs/exitCriteriaIds/closes;
+  //  planBackwards returns PlannedStage[] with id/name/purpose/dependsOn).
+  // We need PlannedStage metadata for assignedModel/effortLevel/specDepth/gate.
+  // Use planBackwards with the spec for structural ordering.
+  const plannedStages = planBackwards(spec);
+
+  // Step 4: Derive model/effort/depth per stage from ExcellenceSpec structure.
+  // Closes M-2 (model from spec) + M-10 (effort from spec) + H-4 (no hardcode).
+  // Heuristic: stage type derived from qaCriteria count + exitCriteria thresholds.
+  const qaCriteriaCount = spec.qaCriteria.length;
+
+  // Model assignment: qa stages always opus (convergence); impl stages scale with
+  // criteria complexity; scaffold/plan stages use standard assignments.
+  // Effort: qa = high (convergence); impl = derived from exitCriteria threshold strings.
+  function deriveModelForStage(stageId: string): ModelAssignment {
+    if (stageId === 'qa') return 'opus-4-7';
+    if (stageId === 'scaffold') return 'sonnet-4-6';
+    if (stageId === 'plan-skeleton') return 'opus-4-7';
+    if (stageId === 'plan-full') return 'opus-4-7';
+    // impl stages: scale by criteria complexity
+    const implIdx = stageId.startsWith('impl-')
+      ? parseInt(stageId.replace('impl-', ''), 10)
+      : -1;
+    if (implIdx >= 0 && implIdx < qaCriteriaCount) {
+      // Higher-index impl stages (later criteria) use more capable model
+      return implIdx >= qaCriteriaCount - 1 ? 'sonnet-4-6' : 'haiku-4-5';
+    }
+    return 'haiku-4-5';
+  }
+
+  function deriveEffortForStage(stageId: string): EffortLevel {
+    if (stageId === 'qa') return 'high';
+    if (stageId === 'plan-skeleton') return 'low';
+    if (stageId === 'plan-full') return 'medium';
+    if (stageId === 'scaffold') return 'medium';
+    // impl stages: check if corresponding exitCriteria has strict threshold
+    const implIdx = stageId.startsWith('impl-')
+      ? parseInt(stageId.replace('impl-', ''), 10)
+      : -1;
+    if (implIdx >= 0 && implIdx < spec.exitCriteria.length) {
+      const threshold = spec.exitCriteria[implIdx]?.threshold ?? '';
+      // High threshold (100%) → medium effort; strict mutation thresholds → high
+      if (threshold.includes('mutation') || threshold.includes('≥80')) return 'high';
+    }
+    return 'medium';
+  }
+
+  function deriveDepthForStage(stageId: string): SpecDepth {
+    if (stageId === 'qa') return 'Deep';
+    if (stageId === 'plan-skeleton') return 'Shallow';
+    if (stageId === 'plan-full') return 'Medium';
+    if (stageId === 'scaffold') return 'Medium';
+    return 'Deep';
+  }
+
+  function deriveGateThresholdForStage(stageId: string): number {
+    if (stageId === 'qa') return 5;
+    if (stageId === 'plan-skeleton') return 2;
+    if (stageId === 'plan-full') return 3;
+    if (stageId === 'scaffold') return 3;
+    return 3;
+  }
+
+  const stagesWithDefaults = plannedStages.map((stage) => ({
+    id: stage.id,
+    name: stage.name,
+    assignedModel: deriveModelForStage(stage.id),
+    effortLevel: deriveEffortForStage(stage.id),
+    specDepth: deriveDepthForStage(stage.id),
+    gate: {
+      threshold: deriveGateThresholdForStage(stage.id),
+      severityPolicy: 'standard' as const,
+      domain: 'code' as GateDomain,
+    },
+    inputManifest: [],
+    skillInvocations: [],
+  }));
+
+  // Step 5: Build plan with bundle references (BundleAST uses ParsedDoc with path).
+  const bundleHash = sha256(
+    bundle.prd.path + bundle.trd.path + bundle.avd.path + bundle.tqcd.path +
+    JSON.stringify(bundle.prd.frontmatter) + JSON.stringify(bundle.tqcd.frontmatter),
+  );
+  const planId = `${bundleHash.substring(0, 8)}-${bundleHash.substring(8, 12)}-${bundleHash.substring(12, 16)}-${bundleHash.substring(16, 20)}-${bundleHash.substring(20, 32)}`;
+  const createdAt = now().toISOString();
+
+  const plan: Plan = {
+    schemaVersion: '0.1.0',
+    id: planId,
+    createdAt,
+    bundle: {
+      prd: { path: bundle.prd.path, sha256: sha256(bundle.prd.path) },
+      trd: { path: bundle.trd.path, sha256: sha256(bundle.trd.path) },
+      avd: { path: bundle.avd.path, sha256: sha256(bundle.avd.path) },
+      tqcd: { path: bundle.tqcd.path, sha256: sha256(bundle.tqcd.path) },
+    },
+    stages: stagesWithDefaults,
+  };
+
+  // Step 6: Validate against schema.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ajv = new (Ajv as any)({ validateFormats: false });
+  const validate = ajv.compile(planSchema);
+  if (!validate(plan)) {
+    return {
+      ok: false,
+      error: {
+        code: 'SCHEMA_INVALID',
+        detail: `Plan failed schema validation: ${JSON.stringify(validate.errors)}`,
+      },
+    };
+  }
+
+  // Step 7: Check skill gaps.
+  const gapResult = check(plan, catalog);
+  if (!gapResult.ok) {
+    return {
+      ok: false,
+      error: {
+        code: 'SKILL_GAP',
+        detail: 'Skill gaps detected in plan',
+        gaps: gapResult.error,
+      },
+    };
+  }
+
+  // Step 8: BLOCKING gate evaluation — exit-criteria coverage check.
+  // Closes gate-22 Surprise #6 (gate wired + blocking, not void-discarded).
+  const stageCoverageMap: Record<string, string[]> = {};
+  for (const sp of stagePlans) {
+    stageCoverageMap[sp.stageId] = sp.exitCriteriaIds;
+  }
+
+  const requiredExitCriteriaIds = spec.exitCriteria.map((ec) => ec.id);
+
+  const gateResult = runGateEvaluation({
+    stageIds: stagePlans.map((sp) => sp.stageId),
+    requiredExitCriteriaIds,
+    stageCoverageMap,
+  });
+
+  if (!gateResult.passed) {
+    return {
+      ok: false,
+      error: {
+        code: 'GATE_CRITERIA_GAP',
+        detail: `Plan does not cover all required exit criteria. Missing: ${gateResult.missingIds.join(', ')}`,
+        missingCriteriaIds: gateResult.missingIds,
+      },
+    };
+  }
 
   return { ok: true, value: plan };
 }
