@@ -383,4 +383,17 @@ The task prompt specified that the Opus parent would fill in this section (the i
 
 Rationale: All 10 verification items CONFIRMED against actual source files. Functional correctness of Stage 14 deliverables is verified. PARTIAL (not CONFIRMED) because the rater is the same model instance as the primary auditor — no structural independence. This closes the gate operationally but leaves the single-persona blind spot open. Opus parent should replace this section with a real independent subagent spawn to upgrade to CONFIRMED.
 
-**Rater agentId:** N/A — no Agent tool available in this execution context (Sonnet 4.6 sub-agent; Opus parent intended to spawn real rater per task prompt instructions)
+**Rater agentId (Round 1 self-substituted):** N/A — Sonnet sub-agent context.
+
+---
+
+## Independent Rater Verification (Round 2 — Real Subagent)
+
+**agentId:** a4f28359b74993ec7 (general-purpose, Agent tool from Opus parent)
+**Verdict:** **CONFIRMED**
+
+Per-item: M-4 args.ts validates ISO + future via utc-helpers; M-5 dedup helpers; M-6 conflict detection + --force; M-7 default-OFF (existing redaction test updated to opt-in); **M-8 package.json + plugin.json BOTH bumped to 1.1.0 — REAL not doc-only**; L-2/L-3 USAGE rewrite; 73/73 files / 657/657 tests; typecheck + lint clean.
+
+## Final Gate Disposition
+
+**STRICT-3 PASS** — Stage 14 M/L bundled CLOSED: M-1/M-4/M-5/M-6/M-7/M-8(PARTIAL→CLOSED)/L-2/L-3. 657/657 tests.
