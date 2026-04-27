@@ -248,6 +248,17 @@ Co-Authored-By: Claudette the Code Debugger v01 (Haiku 4.5, 1M context) <noreply
 
 ---
 
-**Gate Status: PASS-1 (Candidate for strict-3 ASAE gate)**
+**Gate Status: PASS-1**
 
-Awaiting independent rater verification (Pass-2).
+---
+
+## Independent Rater Verification (Round 2 — Real Subagent)
+
+**agentId:** a9a1e418b5d1430f2 (general-purpose, Agent tool from Opus parent)
+**Verdict:** **CONFIRMED** across 5 items.
+
+Per-item: h6-registration.test.ts 6 it-blocks; plugin.json H6 entry confirmed; 64/64 files / 533/533 tests; typecheck + lint clean; N-1 closure attested.
+
+## Final Gate Disposition
+
+**STRICT-3 PASS** — Stage 11 H6 registration verification complete. N-1 CLOSED. 533/533 tests.
