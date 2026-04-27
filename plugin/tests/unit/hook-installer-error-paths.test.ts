@@ -1,8 +1,10 @@
 // Targeted coverage for hook-installer error-return branches.
-// Lines 82-89: settings.hooks[event] is not an array → PARSE_FAIL
-// Lines 117-123: outer catch converts write/rename/mkdir exceptions to WRITE_FAIL
+// Updated for Stage 07: installHooks now uses write-file-atomic (writeFileAtomic.sync)
+// instead of node:fs/promises.writeFile + manual rename.
+//
+// Lines 117-123 (original): outer catch now catches writeFileAtomic.sync throws
 //                (or PARSE_FAIL if message includes 'JSON').
-// Also: inner catch re-throw (line 54) when readFile fails with non-ENOENT, non-JSON error.
+// Also: inner catch re-throw when readFile fails with non-ENOENT, non-JSON error.
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -25,6 +27,7 @@ describe('Hook Installer — error-return branches (lines 82-89, 117-123)', () =
 
   afterEach(async () => {
     vi.resetModules();
+    vi.doUnmock('write-file-atomic');
     vi.doUnmock('node:fs/promises');
     await rm(dir, { recursive: true, force: true });
   });
@@ -48,21 +51,17 @@ describe('Hook Installer — error-return branches (lines 82-89, 117-123)', () =
     }
   });
 
-  it('lines 117-123 (non-JSON): outer catch returns WRITE_FAIL when writeFile throws', async () => {
-    const realFsp = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
-    vi.doMock('node:fs/promises', () => ({
-      ...realFsp,
-      writeFile: async (path: string, ...rest: unknown[]) => {
-        if (String(path).includes('.settings-tmp-')) {
-          throw new Error('EACCES: simulated write permission denied');
-        }
-        return (realFsp.writeFile as unknown as (p: string, ...r: unknown[]) => Promise<void>)(
-          path,
-          ...rest,
-        );
-      },
-      default: { ...realFsp },
-    }));
+  it('lines 117-123 (non-JSON): outer catch returns WRITE_FAIL when writeFileAtomic.sync throws', async () => {
+    // Stage 07: installHooks uses write-file-atomic (sync); mock it to throw EACCES
+    vi.doMock('write-file-atomic', async () => {
+      const realMod = await vi.importActual<typeof import('write-file-atomic')>('write-file-atomic');
+      const fn = async (...args: unknown[]) => (realMod as unknown as ((...a: unknown[]) => Promise<void>))(...args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (fn as any).sync = () => {
+        throw new Error('EACCES: simulated write permission denied');
+      };
+      return { default: fn };
+    });
     vi.resetModules();
 
     const { installHooks } = await import('../../src/core/hook-installer/index.js');
@@ -77,20 +76,16 @@ describe('Hook Installer — error-return branches (lines 82-89, 117-123)', () =
   });
 
   it('lines 117-123 (JSON branch): outer catch returns PARSE_FAIL when thrown error mentions JSON', async () => {
-    const realFsp = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
-    vi.doMock('node:fs/promises', () => ({
-      ...realFsp,
-      writeFile: async (path: string, ...rest: unknown[]) => {
-        if (String(path).includes('.settings-tmp-')) {
-          throw new Error('Unexpected JSON serialization failure');
-        }
-        return (realFsp.writeFile as unknown as (p: string, ...r: unknown[]) => Promise<void>)(
-          path,
-          ...rest,
-        );
-      },
-      default: { ...realFsp },
-    }));
+    // Stage 07: mock writeFileAtomic.sync to throw a JSON-mentioning error
+    vi.doMock('write-file-atomic', async () => {
+      const realMod = await vi.importActual<typeof import('write-file-atomic')>('write-file-atomic');
+      const fn = async (...args: unknown[]) => (realMod as unknown as ((...a: unknown[]) => Promise<void>))(...args);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (fn as any).sync = () => {
+        throw new Error('Unexpected JSON serialization failure');
+      };
+      return { default: fn };
+    });
     vi.resetModules();
 
     const { installHooks } = await import('../../src/core/hook-installer/index.js');

@@ -75,14 +75,12 @@ async function handleGenerate(
   }
 
   const settingsPath = join(claudeRoot, 'settings.json');
-  const hookEntries = [
-    { id: 'H1' as const, event: 'UserPromptSubmit', handler: 'dist/hooks/h1-input-manifest/index.js' },
-    { id: 'H2' as const, event: 'Stop',             handler: 'dist/hooks/h2-deviation-manifest/index.js' },
-    { id: 'H3' as const, event: 'PreToolUse',       handler: 'dist/hooks/h3-sandbox-hygiene/index.js' },
-    { id: 'H4' as const, event: 'PreToolUse',       handler: 'dist/hooks/h4-model-assignment/index.js' },
-    { id: 'H5' as const, event: 'Stop',             handler: 'dist/hooks/h5-gate-result/index.js' },
-  ];
-  const installResult = await coreModules.installHooks(settingsPath, hookEntries);
+  // H-3 systemic closure (Insight B): hardcoded hook list DELETED.
+  // installAllHooks() reads plugin.json at runtime — single source of truth.
+  const installResult = await coreModules.installAllHooks({
+    pluginJsonPath: coreModules.pluginJsonPath,
+    settingsJsonPath: settingsPath,
+  });
   if (!installResult.ok) {
     console.error(JSON.stringify({ error: installResult.error }));
     return 6;
@@ -214,14 +212,19 @@ async function main(): Promise<number> {
   const { buildCatalog } = await import('../core/catalog/index.js');
   const { generate: generateLegacy, generateFromBundleAST } = await import('../core/plan-generator/index.js');
   const { write: writePlan } = await import('../core/plan-writer/index.js');
-  const { installHooks } = await import('../core/hook-installer/index.js');
+  const { installHooks, installAllHooks } = await import('../core/hook-installer/index.js');
   const { AuditLogger } = await import('../core/audit/index.js');
   const { parseBundle } = await import('../core/bundle-parser/index.js');
 
   const claudeRoot = process.env.CLAUDE_ROOT || join(homedir(), '.claude');
 
+  // plugin.json path: resolve relative to this file's directory (dist/) → plugin root
+  const { fileURLToPath } = await import('node:url');
+  const pluginJsonPath = join(fileURLToPath(import.meta.url), '..', '..', '..', 'plugin.json');
+
   // Stage 04c: coreModules includes both live-path (parseBundle + generateFromBundleAST)
   // and legacy fallback (consume + generateLegacy). resolvePlan() picks the live path first.
+  // Stage 07: installAllHooks replaces hardcoded hookEntries array (H-3 systemic closure).
   const coreModules = {
     consume,
     buildCatalog,
@@ -230,6 +233,8 @@ async function main(): Promise<number> {
     parseBundle,
     writePlan,
     installHooks,
+    installAllHooks,
+    pluginJsonPath,
   };
 
   switch (command) {
