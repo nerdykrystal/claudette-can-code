@@ -3,3 +3,4 @@ dist/
 coverage/
 .stryker-tmp/
 reports/
+plan.json

@@ -1,23 +1,23 @@
 {
   "schemaVersion": "0.1.0",
-  "id": "78091529-f3df-95b6-287d-7849c59d82a9",
-  "createdAt": "2026-04-23T02:14:53.182Z",
+  "id": "134fdfdf-2197-e540-0181-6af950ef7fda",
+  "createdAt": "2026-04-27T13:54:24.803Z",
   "bundle": {
     "prd": {
-      "path": "C:/Users/NerdyKrystal/_grand_repo/.claude/worktrees/recursing-cerf-237d75/workspace/plugin/examples/hello-world-planning/PRD_2026-04-22_v01_I.md",
-      "sha256": "2e26255f966f5dd110eea9eeecc11fe3df5056ccb9b0c7115694f1e1d1b07d89"
+      "path": "C:\\Users\\NerdyKrystal\\cold read 2026-04-25\\claudette-can-code\\plugin\\docs\\planning\\v1.1.0\\CDCC_PRD_2026-04-26_v01_I.md",
+      "sha256": "0fd799fad159277a86548df878d2907296a8470a442db9de1686411f656ec312"
     },
     "trd": {
-      "path": "C:/Users/NerdyKrystal/_grand_repo/.claude/worktrees/recursing-cerf-237d75/workspace/plugin/examples/hello-world-planning/TRD_2026-04-22_v01_I.md",
-      "sha256": "5f5b57778df53508a2bbeb1fb17b4d81e844ede553efd13924f3c4a8d332de79"
+      "path": "C:\\Users\\NerdyKrystal\\cold read 2026-04-25\\claudette-can-code\\plugin\\docs\\planning\\v1.1.0\\CDCC_TRD_2026-04-26_v01_I.md",
+      "sha256": "bda35153e4fc6b878aa15cdea2f6afc44e207e8ff4a026431bffcaa9d0246194"
     },
     "avd": {
-      "path": "C:/Users/NerdyKrystal/_grand_repo/.claude/worktrees/recursing-cerf-237d75/workspace/plugin/examples/hello-world-planning/AVD_2026-04-22_v01_I.md",
-      "sha256": "9116bc03b2768cfe101dad21fab15bae4cabec93a1de6d3f096c5356878e83b7"
+      "path": "C:\\Users\\NerdyKrystal\\cold read 2026-04-25\\claudette-can-code\\plugin\\docs\\planning\\v1.1.0\\CDCC_AVD_2026-04-26_v01_I.md",
+      "sha256": "e9aba63fc86d979591e6dc1efd08f32dfaed80564779b5b9d2d8e937634a495f"
     },
     "tqcd": {
-      "path": "C:/Users/NerdyKrystal/_grand_repo/.claude/worktrees/recursing-cerf-237d75/workspace/plugin/examples/hello-world-planning/TQCD_2026-04-22_v01_I.md",
-      "sha256": "efe031a27e5e6c2c650f8e553e6e18f41ab66dfe883b6d58764d37238b5e9eac"
+      "path": "C:\\Users\\NerdyKrystal\\cold read 2026-04-25\\claudette-can-code\\plugin\\docs\\planning\\v1.1.0\\CDCC_TQCD_2026-04-26_v01_I.md",
+      "sha256": "8d2419c076b68a59fe676c1b0d47ac887c8caef2d944c42dfbb94120cf144598"
     }
   },
   "stages": [
@@ -123,6 +123,790 @@
       "id": "impl-4",
       "name": "Implementation Stage 4",
       "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-5",
+      "name": "Implementation Stage 5",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-6",
+      "name": "Implementation Stage 6",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-7",
+      "name": "Implementation Stage 7",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-8",
+      "name": "Implementation Stage 8",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-9",
+      "name": "Implementation Stage 9",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-10",
+      "name": "Implementation Stage 10",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-11",
+      "name": "Implementation Stage 11",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-12",
+      "name": "Implementation Stage 12",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-13",
+      "name": "Implementation Stage 13",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-14",
+      "name": "Implementation Stage 14",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-15",
+      "name": "Implementation Stage 15",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-16",
+      "name": "Implementation Stage 16",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "high",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-17",
+      "name": "Implementation Stage 17",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-18",
+      "name": "Implementation Stage 18",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-19",
+      "name": "Implementation Stage 19",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-20",
+      "name": "Implementation Stage 20",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "high",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-21",
+      "name": "Implementation Stage 21",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "high",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-22",
+      "name": "Implementation Stage 22",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-23",
+      "name": "Implementation Stage 23",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-24",
+      "name": "Implementation Stage 24",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-25",
+      "name": "Implementation Stage 25",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-26",
+      "name": "Implementation Stage 26",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-27",
+      "name": "Implementation Stage 27",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-28",
+      "name": "Implementation Stage 28",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-29",
+      "name": "Implementation Stage 29",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-30",
+      "name": "Implementation Stage 30",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-31",
+      "name": "Implementation Stage 31",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-32",
+      "name": "Implementation Stage 32",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-33",
+      "name": "Implementation Stage 33",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-34",
+      "name": "Implementation Stage 34",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-35",
+      "name": "Implementation Stage 35",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-36",
+      "name": "Implementation Stage 36",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-37",
+      "name": "Implementation Stage 37",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-38",
+      "name": "Implementation Stage 38",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-39",
+      "name": "Implementation Stage 39",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-40",
+      "name": "Implementation Stage 40",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-41",
+      "name": "Implementation Stage 41",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-42",
+      "name": "Implementation Stage 42",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-43",
+      "name": "Implementation Stage 43",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-44",
+      "name": "Implementation Stage 44",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-45",
+      "name": "Implementation Stage 45",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-46",
+      "name": "Implementation Stage 46",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-47",
+      "name": "Implementation Stage 47",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-48",
+      "name": "Implementation Stage 48",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-49",
+      "name": "Implementation Stage 49",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-50",
+      "name": "Implementation Stage 50",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-51",
+      "name": "Implementation Stage 51",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-52",
+      "name": "Implementation Stage 52",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-53",
+      "name": "Implementation Stage 53",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-54",
+      "name": "Implementation Stage 54",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-55",
+      "name": "Implementation Stage 55",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-56",
+      "name": "Implementation Stage 56",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-57",
+      "name": "Implementation Stage 57",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-58",
+      "name": "Implementation Stage 58",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-59",
+      "name": "Implementation Stage 59",
+      "assignedModel": "haiku-4-5",
+      "effortLevel": "medium",
+      "specDepth": "Deep",
+      "gate": {
+        "threshold": 3,
+        "severityPolicy": "standard",
+        "domain": "code"
+      },
+      "inputManifest": [],
+      "skillInvocations": []
+    },
+    {
+      "id": "impl-60",
+      "name": "Implementation Stage 60",
+      "assignedModel": "sonnet-4-6",
       "effortLevel": "medium",
       "specDepth": "Deep",
       "gate": {

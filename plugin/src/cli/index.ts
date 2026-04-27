@@ -17,6 +17,31 @@ Usage:
 `;
 
 // Extract helper functions to reduce main() complexity
+
+/**
+ * Resolve a plan from a planningDir.
+ * Stage 04c live path: try parseBundle + generateFromBundleAST first.
+ * Falls back to legacy consume + generate for old-format bundles (backward compat).
+ * Closes gate-22 C-1 / M-2 / M-10 / H-4 on production CLI path.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolvePlan(planningDir: string, catalog: any, coreModules: any) {
+  const resolvedDir = resolve(planningDir);
+
+  // Live path: try parseBundle (v1.1.0 bundles with CDCC_*_2026-04-26_v01_I.md filenames)
+  const parseBundleResult = coreModules.parseBundle(resolvedDir);
+  if (parseBundleResult.ok) {
+    return coreModules.generateFromBundleAST({ bundle: parseBundleResult.value, catalog });
+  }
+
+  // Legacy fallback: consume (PRD*.md / TRD*.md glob, status=PASS required) + generate
+  const bundleResult = await coreModules.consume(resolvedDir);
+  if (!bundleResult.ok) {
+    return { ok: false as const, error: bundleResult.error, _fromConsume: true };
+  }
+  return coreModules.generateLegacy({ bundle: bundleResult.value, catalog });
+}
+
 async function handleGenerate(
   planningDir: string | undefined,
   args: string[],
@@ -29,17 +54,14 @@ async function handleGenerate(
     return 2;
   }
 
-  const bundleResult = await coreModules.consume(resolve(planningDir));
-  if (!bundleResult.ok) {
-    console.error(JSON.stringify({ error: bundleResult.error }));
-    return 3;
-  }
-
   const catalog = await coreModules.buildCatalog(claudeRoot);
-  const planResult = await coreModules.generatePlan({ bundle: bundleResult.value, catalog });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const planResult = await resolvePlan(planningDir, catalog, coreModules) as any;
   if (!planResult.ok) {
+    // Distinguish bundle-load failure (exit 3) from plan-generation failure (exit 4)
+    const exitCode = planResult._fromConsume ? 3 : 4;
     console.error(JSON.stringify({ error: planResult.error }));
-    return 4;
+    return exitCode;
   }
 
   const planPath = resolve('plan.json');
@@ -83,17 +105,13 @@ async function handleDryRun(
     return 2;
   }
 
-  const bundleResult = await coreModules.consume(resolve(planningDir));
-  if (!bundleResult.ok) {
-    console.error(JSON.stringify({ error: bundleResult.error }));
-    return 3;
-  }
-
   const catalog = await coreModules.buildCatalog(claudeRoot);
-  const planResult = await coreModules.generatePlan({ bundle: bundleResult.value, catalog });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const planResult = await resolvePlan(planningDir, catalog, coreModules) as any;
   if (!planResult.ok) {
+    const exitCode = planResult._fromConsume ? 3 : 4;
     console.error(JSON.stringify({ error: planResult.error }));
-    return 4;
+    return exitCode;
   }
 
   console.log(JSON.stringify({ dryRun: true, plan: planResult.value }, null, 2));
@@ -126,13 +144,25 @@ async function main(): Promise<number> {
   // Lazy load core modules to avoid ESM/CommonJS interop issues at load time
   const { consume } = await import('../core/bundle/index.js');
   const { buildCatalog } = await import('../core/catalog/index.js');
-  const { generate: generatePlan } = await import('../core/plan-generator/index.js');
+  const { generate: generateLegacy, generateFromBundleAST } = await import('../core/plan-generator/index.js');
   const { write: writePlan } = await import('../core/plan-writer/index.js');
   const { installHooks } = await import('../core/hook-installer/index.js');
   const { AuditLogger } = await import('../core/audit/index.js');
+  const { parseBundle } = await import('../core/bundle-parser/index.js');
 
   const claudeRoot = process.env.CLAUDE_ROOT || join(homedir(), '.claude');
-  const coreModules = { consume, buildCatalog, generatePlan, writePlan, installHooks };
+
+  // Stage 04c: coreModules includes both live-path (parseBundle + generateFromBundleAST)
+  // and legacy fallback (consume + generateLegacy). resolvePlan() picks the live path first.
+  const coreModules = {
+    consume,
+    buildCatalog,
+    generateLegacy,
+    generateFromBundleAST,
+    parseBundle,
+    writePlan,
+    installHooks,
+  };
 
   switch (command) {
     case 'help':
