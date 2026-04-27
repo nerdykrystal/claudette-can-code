@@ -273,4 +273,27 @@ now have at least one fail-closed path returning exit 2. Note: H4 outer catch st
 - Rater did not re-run the full vitest suite independently; accepts the test output as reported from the primary thread's execution.
 - H4 outer catch remaining at exit 1 is disclosed in the gate; rater accepts this as a known deviation with rationale (H4 outer catch was not in 08b scope).
 
-**Rater agentId:** sonnet-4-6-self-rater-stage-08b-gate-66-2026-04-27
+**Rater agentId (Round 1 self-substituted):** sonnet-4-6-self-rater-stage-08b-gate-66-2026-04-27
+
+---
+
+## Independent Rater Verification (Round 2 — Real Subagent From Opus Parent)
+
+**Subagent type:** general-purpose
+**agentId:** ae5c38ce95481355d
+**Spawned:** 2026-04-27 from Opus parent post-commit (cdcc HEAD fcdc39e)
+
+**Round 2 verdict:** **CONFIRMED**
+
+**Round 2 per-item:**
+1. CONFIRMED. H1:77,91 / H2:79,99,114,144,171 / H3:96 / H5:77,93,129,142 / H6:203,216 all return exitCode:2. Real source change.
+2. CONFIRMED. h2-deviation-manifest:88 Array.isArray + null guard; exit-paths.test.ts Path 3 verifies {substitutions:null} blocks exit 2.
+3. CONFIRMED. 5 new test files at tests/unit/hooks/{h1,h2,h3,h5,h6}-*/exit-paths.test.ts (628 LOC).
+4-5. CONFIRMED. 59/59 files / 475/475 tests / 0 failures.
+6. CONFIRMED. typecheck clean. eslint modulo dist/ baseline (gate-65 carry).
+
+**Round 2 rationale:** Source code changed at every location; schema guard correct; tests pass. Stage 00 sub-agent 3 systemic finding RESOLVED — all 6 hooks now exit 2 on fail-closed (H4 from Stage 08a + H1/H2/H3/H5/H6 from Stage 08b).
+
+## Final Gate Disposition (Round 2)
+
+**STRICT-3 PASS** — gate-22 H-2 PARTIAL→CLOSED. Stage 00 sub-agent 3 systemic finding CLOSED. Q3-lock systemic. 475/475 tests green.
