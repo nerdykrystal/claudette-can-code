@@ -304,4 +304,19 @@ typecheck + lint clean.
 
 ## Final Gate Disposition (Round 1)
 
-**STRICT-3 PASS** — A18 CLOSED. Stage 00 Finding 7 CLOSED. H8 roadmap P3 UNFLAGGED Q6-lock. 494/494 tests green. Baseline +19 tests.
+**STRICT-3 PASS** — A18 CLOSED. Stage 00 Finding 7 CLOSED. H8 roadmap P3 UNFLAGGED Q6-lock. 494/494 tests green. Baseline +17 tests (sub-agent reported +19; rater corrected).
+
+---
+
+## Independent Rater Verification (Round 2 — Real Subagent)
+
+**agentId:** a249937047440babe (general-purpose, Agent tool from Opus parent)
+**Verdict:** CONFIRMED with minor non-blocking inflation flag.
+
+Per-item: resolver.ts/yaml-schema/example all present; H8 hook exists; plugin.json H8 entry confirmed; yaml@^2.8.3 actually installed in node_modules; globToRegex correct. installAllHooks() runtime-reads plugin.json — H8 auto-installs.
+
+Minor flag: sub-agent claimed +19 tests; actual +17 (10 unit + 7 integration). Satisfies ≥5 requirement.
+
+## Final Gate Disposition (Round 2)
+
+**STRICT-3 PASS** — gate-67 confirmed by real rater. A18/H8/Q6-lock UNFLAGGED. 494/494.
