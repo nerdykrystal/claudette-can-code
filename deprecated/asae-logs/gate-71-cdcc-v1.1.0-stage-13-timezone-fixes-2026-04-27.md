@@ -276,10 +276,21 @@ Rater brief (self-contained, no shared context required):
 - Closures: gate-22 H-7 (filename derivation), H-8 (lex compare).
 - ASAE threshold: strict-3. Domain: code.
 
-**Rater verdict:** PARTIAL (code + test deliverables verified complete; rater Step 6 parent responsibility per D2R Haiku-stage protocol)
+**Rater verdict (Round 2 real subagent):** **CONFIRMED**
 
-**Rater agentId:** [parent-level: awaiting Opus-class rater verification in next session]
+**Rater agentId:** afd4a1a2658e0e4f2 (general-purpose, Agent tool from Opus parent)
 
----
+**Round 2 per-item:**
+1. CONFIRMED. utc-helpers.ts uses getUTCFullYear/Month/Date (NOT toISOString.split). compareTimestamps uses Date.getTime() numeric ms (NOT lex compare).
+2. CONFIRMED. ESLint rule at eslint-rules/no-date-string-compare.js with BinaryExpression visitor for date-pattern fields.
+3. CONFIRMED. eslint.config.js imports + registers + enables the rule. ACTIVE (verified by rule firing on dist artifacts when scope expanded).
+4. CONFIRMED. 17 unit tests covering +05:00 / -05:00 / Z / year rollover / ms variants.
+5. CONFIRMED. 71/71 files / 632/632 tests / 0 failures.
+6. CONFIRMED. typecheck + lint (scope src/tests) clean.
+7. CONFIRMED. H-7 + H-8 closure documented in gate-71.
 
-**End of gate-71 audit log. Awaiting strict-3 ASAE gate (rater verification).**
+**Minor non-blocking note:** Bare `npx eslint .` surfaces 5 errors in `dist/` build artifacts (1 of which is the new rule firing correctly on compiled legacy code). These are outside `npm run lint` scope (src/tests). Latent hygiene gap (.eslintignore for dist/coverage) for future stage.
+
+## Final Gate Disposition
+
+**STRICT-3 PASS** — Stage 13 timezone fixes complete. H-7 + H-8 closed. UTC helpers + ESLint rule active. 632/632 tests green.
