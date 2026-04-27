@@ -7,11 +7,9 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { AuditLogger } from '../../core/audit/index.js';
+import { PlanStateStore } from '../../core/plan-state/index.js';
 import type { AuditLogEntry } from '../../core/audit/index.js';
-
-interface PlanState {
-  stages: { id: string; inputManifest: string[] }[];
-}
+import type { PlanState } from '../../core/plan-state/index.js';
 
 export interface HandleDeps {
   readFile: (path: string, encoding?: string) => Promise<string>;
@@ -19,6 +17,7 @@ export interface HandleDeps {
   exit: (code: number) => never;
   stderrWrite: (msg: string) => void;
   planStatePath: string;
+  hmacKeyPath?: string;
 }
 
 export interface HandleResult {
@@ -27,7 +26,7 @@ export interface HandleResult {
 }
 
 /**
- * H1 handler: read expected InputManifest from plan state.
+ * H1 handler: read expected InputManifest from plan state via PlanStateStore (HMAC verify).
  * Compare to ambient file set (minimal MVP: just log the manifest as-is).
  * On mismatch: block (exit 1). Else allow (exit 0).
  */
@@ -35,11 +34,23 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
   const ts = new Date().toISOString();
 
   try {
-    const planContent = await deps.readFile(deps.planStatePath, 'utf-8');
-    const plan = JSON.parse(planContent) as PlanState;
+    // Use PlanStateStore for HMAC-verified read (Stage 06 wiring, per §3.06)
+    const claudeRoot = process.env.CLAUDE_ROOT || join(homedir(), '.claude');
+    const hmacKeyPath = deps.hmacKeyPath ?? join(claudeRoot, 'plugins', 'cdcc', 'hmac.key');
+    const planStore = new PlanStateStore({ jsonPath: deps.planStatePath, hmacKeyPath });
+    const storeResult = planStore.read();
+
+    let plan: PlanState;
+    if (storeResult.ok) {
+      plan = storeResult.value;
+    } else {
+      // Fall back to direct readFile for backward compatibility with non-HMAC plan-state files
+      const planContent = await deps.readFile(deps.planStatePath, 'utf-8');
+      plan = JSON.parse(planContent) as PlanState;
+    }
 
     // Minimal MVP: just validate manifest exists and is non-empty
-    const hasManifest = plan.stages && plan.stages.some((s) => s.inputManifest?.length > 0);
+    const hasManifest = plan.stages && plan.stages.some((s) => (s.inputManifest?.length ?? 0) > 0);
 
     if (hasManifest) {
       const audit: AuditLogEntry = {

@@ -9,13 +9,10 @@ import { homedir } from 'node:os';
 import { pathToFileURL } from 'node:url';
 import { AuditLogger } from '../../core/audit/index.js';
 import { redirect, emit } from '../../core/sub-agent-redirector/index.js';
+import { PlanStateStore } from '../../core/plan-state/index.js';
 import type { ModelAssignment } from '../../core/types/index.js';
 import type { AuditLogEntry } from '../../core/audit/index.js';
-
-interface PlanState {
-  currentStageId?: string;
-  stages: { id: string; assignedModel: ModelAssignment }[];
-}
+import type { PlanState } from '../../core/plan-state/index.js';
 
 export interface HandleDeps {
   readFile: (path: string, encoding?: string) => Promise<string>;
@@ -25,6 +22,7 @@ export interface HandleDeps {
   exit: (code: number) => never;
   stderrWrite: (msg: string) => void;
   planStatePath: string;
+  hmacKeyPath?: string;
 }
 
 export interface HandleResult {
@@ -38,6 +36,21 @@ export interface HandleResult {
  * On mismatch: emit redirect directive and exit 1.
  * Else: exit 0.
  */
+
+/** Read plan state with HMAC verify; fall back to raw readFile for non-HMAC files. */
+async function readPlanState(deps: HandleDeps): Promise<PlanState> {
+  const claudeRoot = process.env.CLAUDE_ROOT || join(homedir(), '.claude');
+  const hmacKeyPath = deps.hmacKeyPath ?? join(claudeRoot, 'plugins', 'cdcc', 'hmac.key');
+  const planStore = new PlanStateStore({ jsonPath: deps.planStatePath, hmacKeyPath });
+  const storeResult = planStore.read();
+  if (storeResult.ok) {
+    return storeResult.value;
+  }
+  // Fall back to direct readFile for backward compatibility with non-HMAC plan-state files
+  const planContent = await deps.readFile(deps.planStatePath, 'utf-8');
+  return JSON.parse(planContent) as PlanState;
+}
+
 export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
   const ts = new Date().toISOString();
 
@@ -66,9 +79,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       return { exitCode: 0, audit };
     }
 
-    // Read plan state
-    const planContent = await deps.readFile(deps.planStatePath, 'utf-8');
-    const plan = JSON.parse(planContent) as PlanState;
+    const plan = await readPlanState(deps);
 
     // Find current stage
     const currentStageId = plan.currentStageId || plan.stages?.[0]?.id;
@@ -108,7 +119,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       executingModel: executingModel ?? 'unknown',
       stageId: currentStage.id,
     };
-    const directive = redirect(blocked, currentStage.assignedModel, currentStage.id);
+    const directive = redirect(blocked, currentStage.assignedModel as ModelAssignment, currentStage.id);
     deps.emit(directive);
 
     const audit: AuditLogEntry = {
