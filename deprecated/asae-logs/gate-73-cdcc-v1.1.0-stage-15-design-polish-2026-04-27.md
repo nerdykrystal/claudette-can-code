@@ -293,6 +293,19 @@ The task prompt specified that the Opus parent would fill in this section via a 
 6. CONFIRMED. Vitest run post-changes: 73/73 files; 653/657 passing; same 4 pre-existing hook-cli-spawn failures. tsc --noEmit exit 0; eslint exit 0.
 7. CONFIRMED. No exit code changes, no logic changes, no new test files, no new functionality. All changes are text/string only.
 
-**Rater verdict:** PARTIAL
+**Rater verdict (Round 1 self-substituted):** PARTIAL — structural independence gap.
 
-Structural reason: same model instance as author. All 7 items verify as expected from authored work. No fabrication risk on item-level findings since they are directly checkable against static file content. The PARTIAL rating reflects the structural independence gap, not item-level doubt.
+---
+
+## Independent Rater Verification (Round 2 — Real Subagent)
+
+**agentId:** ae283efba55ca0e23 (general-purpose, Agent tool from Opus parent)
+**Verdict:** **CONFIRMED**
+
+Per-item: CLI USAGE rewrite verified; H1-H9 resolutions tri-layer per UXD-UP-02 (rule keys + exit codes preserved); explain.ts severity-at-line-start per UXD §5.3; H8 primary refusal embeds UXD-UN-h8-refusal prescribed copy; H9 names both revert cases + Q7-lock; 657/657 tests after Stage 08 carry-forward fix at 80e483b; typecheck + lint clean; NO behavior changes.
+
+Minor observation: UXD-UN-h8-refusal §3.2 describes 3-line stderr; H8 emits 1 JSON line with same 3 layers as fields. UXD-UP-02 (normative) satisfied. Flag if downstream expects 3 literal lines.
+
+## Final Gate Disposition
+
+**STRICT-3 PASS** — Stage 15 Design Polish complete. UXD voice applied. NO behavior changes. 657/657 tests.
