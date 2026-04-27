@@ -169,8 +169,9 @@ describe('CLI Bundle Pipeline E2E — Stage 04c live path', () => {
   it('e2e-5: generate on real v1.1.0 bundle → writes plan.json + installs hooks', async () => {
     const claudeRoot = join(tmpDir, '.claude');
     // plan.json is written to resolve('plan.json') = process.cwd() in the worker.
-    // We verify success via stdout, not the written file (process.chdir unsupported in workers).
-    const result = await runCLI(['generate', bundlePath], { CLAUDE_ROOT: claudeRoot });
+    // --force is required per TRD-FR-16 (L-5 closure): non-TTY non-interactive context; plan.json
+    // may already exist from a prior run. --force is the spec-correct override.
+    const result = await runCLI(['generate', bundlePath, '--force'], { CLAUDE_ROOT: claudeRoot });
 
     expect(result.status).toBe(0);
     const parsed = JSON.parse(result.stdout);
@@ -184,7 +185,8 @@ describe('CLI Bundle Pipeline E2E — Stage 04c live path', () => {
 
   it('e2e-6: generate → stdout reports stages > 0 and valid plan path (live path, not hardcode)', async () => {
     const claudeRoot = join(tmpDir, '.claude');
-    const result = await runCLI(['generate', bundlePath], { CLAUDE_ROOT: claudeRoot });
+    // --force: TRD-FR-16 (L-5 closure) — non-TTY non-interactive context requires --force
+    const result = await runCLI(['generate', bundlePath, '--force'], { CLAUDE_ROOT: claudeRoot });
     expect(result.status).toBe(0);
 
     const parsed = JSON.parse(result.stdout);

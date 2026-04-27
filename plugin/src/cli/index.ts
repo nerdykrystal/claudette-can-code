@@ -4,8 +4,9 @@
 
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { realpathSync } from 'node:fs';
+import { realpathSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
+import { createInterface } from 'node:readline';
 
 const USAGE = `cdcc — Claudette Can Code (Pro) Plugin MVP
 
@@ -16,10 +17,29 @@ Usage:
   cdcc migrate-audit-log [--source=<path>]       Migrate JSONL audit logs to sqlite
                          [--target=<path>]
                          [--resume]
+  cdcc explain <event_id>                        Show full audit event + recovery_events markup
+  cdcc rollback <event_id>                       Revert git commit / working tree per recovery_event
+  cdcc config <get|set|list|reset> [key] [val]  Manage plugin config (~/.claude/plugins/cdcc/)
   cdcc --help                                    Show this message
+
+Exit codes: 0=ok, 1=usage, 2=validation, 3=state, 4=dependency, 5=I/O, 6=external
 `;
 
 // Extract helper functions to reduce main() complexity
+
+/**
+ * L-5 closure: prompt user to confirm overwrite of an existing plan.json.
+ * Returns true if user confirms (y/yes), false otherwise.
+ */
+function confirmOverwrite(planPath: string): Promise<boolean> {
+  return new Promise((res) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(`plan.json already exists at ${planPath}. Overwrite? [y/N] `, (answer) => {
+      rl.close();
+      res(answer.trim().toLowerCase() === 'y' || answer.trim().toLowerCase() === 'yes');
+    });
+  });
+}
 
 /**
  * Resolve a plan from a planningDir.
@@ -68,6 +88,20 @@ async function handleGenerate(
   }
 
   const planPath = resolve('plan.json');
+
+  // L-5 closure: overwrite-confirm prompt when plan.json already exists (non-interactive skips)
+  if (existsSync(planPath) && process.stdin.isTTY) {
+    const confirmed = await confirmOverwrite(planPath);
+    if (!confirmed) {
+      console.log(JSON.stringify({ ok: false, message: `Aborted: plan.json already exists at ${planPath}. Re-run with --force to overwrite.` }));
+      return 0;
+    }
+  } else if (existsSync(planPath) && args.includes('--force')) {
+    // --force flag skips prompt in non-TTY / scripted contexts
+  } else if (existsSync(planPath) && !process.stdin.isTTY && !args.includes('--force')) {
+    console.error(JSON.stringify({ error: `plan.json already exists at ${planPath}. Use --force to overwrite.` }));
+    return 3;
+  }
   const writeResult = await coreModules.writePlan(planResult.value, planPath);
   if (!writeResult.ok) {
     console.error(JSON.stringify({ error: writeResult.error }));
@@ -255,6 +289,21 @@ async function main(): Promise<number> {
 
     case 'migrate-audit-log':
       return handleMigrateAuditLog(args, claudeRoot);
+
+    case 'explain': {
+      const { handleExplain } = await import('./commands/explain.js');
+      return handleExplain(args[0], { claudeRoot });
+    }
+
+    case 'rollback': {
+      const { handleRollback } = await import('./commands/rollback.js');
+      return handleRollback(args[0], { claudeRoot });
+    }
+
+    case 'config': {
+      const { handleConfig } = await import('./commands/config.js');
+      return handleConfig(args[0], args.slice(1));
+    }
 
     default:
       console.error(`cdcc: unknown command "${command ?? '(none)'}".\n\n${USAGE}`);

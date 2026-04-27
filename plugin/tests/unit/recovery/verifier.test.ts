@@ -7,7 +7,7 @@
 //   5. VIOLATION_TYPES array covers all 6 enum values from /asae v06
 // Additional coverage tests.
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   validateRecoveryEvent,
   isValidRevertTarget,
@@ -266,14 +266,14 @@ describe('runVerification', () => {
     }
   });
 
-  it('suggestedRevertTarget on non-git cwd is working_tree_state', () => {
+  it('suggestedRevertTarget on non-git cwd is working_tree_state', async () => {
     // Use a temp-like path that is not a git repo
     const result = runVerification('stage-10', {
       typecheck: false,
       lint: false,
       coverage: false,
       scopeBoundsCheck: false,
-      cwd: require('os').tmpdir(),
+      cwd: (await import('node:os')).tmpdir(),
     });
     if (!result.passed) {
       // Non-git workspace violation
