@@ -96,3 +96,46 @@ export async function runGate(scope: GateScope, auditor: Auditor): Promise<Conve
     iterations: maxIterations,
   };
 }
+
+// ─── Stage 04: runGateEvaluation ─────────────────────────────────────────────
+
+export interface GateEvaluationInput {
+  /** Flat list of stage IDs in the plan */
+  stageIds: string[];
+  /** Exit-criteria IDs the plan must collectively cover */
+  requiredExitCriteriaIds: string[];
+  /** Mapping: stageId → exitCriteriaIds that stage covers */
+  stageCoverageMap: Record<string, string[]>;
+}
+
+export interface GateEvaluationResult {
+  passed: boolean;
+  coveredIds: string[];
+  missingIds: string[];
+}
+
+/**
+ * Evaluate whether a plan covers all required exit-criteria.
+ * Called from plan-generator's exit path (Surprise #6 gate wired).
+ * Pure function — no async, no I/O.
+ *
+ * Closes gate-22 Surprise #6 (gate module wired into plan generation).
+ */
+export function runGateEvaluation(input: GateEvaluationInput): GateEvaluationResult {
+  const covered = new Set<string>();
+
+  for (const stageId of input.stageIds) {
+    const stageCoverage = input.stageCoverageMap[stageId] ?? [];
+    for (const ecId of stageCoverage) {
+      covered.add(ecId);
+    }
+  }
+
+  const missingIds = input.requiredExitCriteriaIds.filter((id) => !covered.has(id));
+
+  return {
+    passed: missingIds.length === 0,
+    coveredIds: Array.from(covered),
+    missingIds,
+  };
+}
