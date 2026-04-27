@@ -1,0 +1,23 @@
+# protected_files.yaml — Protected Files Configuration Example
+# Schema version: 1
+# Stage 09 — FR-007 Protected Files Resolver.
+#
+# Rules are evaluated in first-match-wins order.
+# - glob: fast-glob compatible pattern (** for recursive, * for single segment)
+# - allowed_personas: list of persona slugs that may edit matching files.
+#   Empty array = blocked for everyone, including operators.
+# - deny_message: human-readable reason shown in stderr on block.
+#
+# Windows paths are normalized (backslash → forward slash, lowercased)
+# before matching, so patterns are case-insensitive on all platforms.
+
+version: 1
+rules:
+  - id: rule-1
+    glob: "**/.env*"
+    allowed_personas: []
+    deny_message: "Environment files contain secrets — never edited via assistant"
+  - id: rule-2
+    glob: "**/role-manifests/**"
+    allowed_personas: ["claude-the-pek-remediator"]
+    deny_message: "Role-manifest edits limited to claude-the-pek-remediator persona"

@@ -12,7 +12,7 @@ import { SQLiteAuditStore } from './sqlite-store.js';
 const ajv = new (Ajv as any)({ validateFormats: false });
 
 // Re-export HookId from shared types for backward compatibility
-export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6' | 'plan_generated' | 'dry_run' | 'audit_query';
+export type HookId = 'H1' | 'H2' | 'H3' | 'H4' | 'H5' | 'H6' | 'H8' | 'plan_generated' | 'dry_run' | 'audit_query';
 export type Decision = 'allow' | 'block' | 'halt';
 
 export interface AuditLogEntry {
