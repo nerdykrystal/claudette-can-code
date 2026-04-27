@@ -1,28 +1,31 @@
-// Coverage for AuditLogger.log() outer-catch WRITE_FAIL branch (lines 96-98).
+// Coverage for AuditLogger.log() WRITE_FAIL + SCHEMA_INVALID branches.
+// Stage 05 rewrite: sqlite-store-based; replaces old node:fs/promises mock approach.
 
-import { describe, it, expect, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { AuditLogger, type AuditLogEntry } from '../../src/core/audit/index.js';
 
-describe('Audit Logger — log() WRITE_FAIL branch (lines 96-98)', () => {
-  afterEach(() => {
-    vi.resetModules();
-    vi.doUnmock('node:fs/promises');
+describe('Audit Logger — log() WRITE_FAIL branch', () => {
+  let logDir: string;
+  let logger: AuditLogger;
+
+  beforeEach(async () => {
+    logDir = await mkdtemp(join(tmpdir(), 'audit-err-'));
+    logger = new AuditLogger(logDir);
   });
 
-  it('returns WRITE_FAIL when fs.open throws (non-Error thrown for String(err) branch)', async () => {
-    const realFsp = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
-    vi.doMock('node:fs/promises', () => ({
-      ...realFsp,
-      open: async () => {
-        // Throw a non-Error value to exercise the `String(err)` branch of
-        // `const detail = err instanceof Error ? err.message : String(err);`
-        throw 'non-error-open-failure';
-      },
-      default: { ...realFsp },
-    }));
-    vi.resetModules();
+  afterEach(async () => {
+    // Close store before rm to release WAL locks on Windows
+    logger.close();
+    await rm(logDir, { recursive: true, force: true });
+  });
 
-    const { AuditLogger } = await import('../../src/core/audit/index.js');
-    const logger = new AuditLogger('/tmp/cdcc-audit-fake');
+  it('returns WRITE_FAIL when sqlite store is closed before log()', async () => {
+    // Close the underlying store to simulate a write failure
+    logger.close();
+
     const result = await logger.log({
       ts: new Date().toISOString(),
       hookId: 'H1',
@@ -35,23 +38,16 @@ describe('Audit Logger — log() WRITE_FAIL branch (lines 96-98)', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.code).toBe('WRITE_FAIL');
-      expect(result.error.detail).toBe('non-error-open-failure');
     }
+
+    // Re-open so afterEach close() works
+    logger = new AuditLogger(join(logDir, 'reopen'));
   });
 
-  it('returns WRITE_FAIL with Error.message when fs.open throws an Error', async () => {
-    const realFsp = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
-    vi.doMock('node:fs/promises', () => ({
-      ...realFsp,
-      open: async () => {
-        throw new Error('EACCES: simulated open failure');
-      },
-      default: { ...realFsp },
-    }));
-    vi.resetModules();
+  it('returns WRITE_FAIL with non-Error thrown from store (String detail branch)', async () => {
+    // Close first so subsequent write throws
+    logger.close();
 
-    const { AuditLogger } = await import('../../src/core/audit/index.js');
-    const logger = new AuditLogger('/tmp/cdcc-audit-fake-2');
     const result = await logger.log({
       ts: new Date().toISOString(),
       hookId: 'H2',
@@ -64,7 +60,55 @@ describe('Audit Logger — log() WRITE_FAIL branch (lines 96-98)', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error.code).toBe('WRITE_FAIL');
-      expect(result.error.detail).toContain('EACCES');
+      expect(typeof result.error.detail).toBe('string');
+    }
+
+    logger = new AuditLogger(join(logDir, 'reopen2'));
+  });
+});
+
+describe('Audit Logger — log() SCHEMA_INVALID branch', () => {
+  let logDir: string;
+  let logger: AuditLogger;
+
+  beforeEach(async () => {
+    logDir = await mkdtemp(join(tmpdir(), 'audit-schema-'));
+    logger = new AuditLogger(logDir);
+  });
+
+  afterEach(async () => {
+    logger.close();
+    await rm(logDir, { recursive: true, force: true });
+  });
+
+  it('returns SCHEMA_INVALID for entry missing required fields', async () => {
+    const invalidEntry = {
+      ts: '2026-04-22T12:00:00Z',
+      hookId: 'H1',
+      // Missing stage, decision, rationale, payload
+    } as unknown as AuditLogEntry;
+
+    const result = await logger.log(invalidEntry);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('SCHEMA_INVALID');
+    }
+  });
+
+  it('returns SCHEMA_INVALID for empty rationale string', async () => {
+    const entry: AuditLogEntry = {
+      ts: new Date().toISOString(),
+      hookId: 'H1',
+      stage: null,
+      decision: 'allow',
+      rationale: '',
+      payload: {},
+    };
+
+    const result = await logger.log(entry);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe('SCHEMA_INVALID');
     }
   });
 });

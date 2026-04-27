@@ -123,6 +123,7 @@ export async function handle(): Promise<void> {
     sandboxMarkerPath,
   });
 
+  auditLogger.close();
   process.exit(result.exitCode);
 }
 

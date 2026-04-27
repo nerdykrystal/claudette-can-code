@@ -14,6 +14,8 @@ describe('AuditLogger', () => {
   });
 
   afterEach(async () => {
+    // Must close sqlite store before rm() to release WAL file locks on Windows.
+    logger.close();
     await rm(logDir, { recursive: true, force: true });
   });
 
@@ -149,6 +151,8 @@ describe('AuditLogger', () => {
     const entries = await newLogger.query();
     expect(entries).toHaveLength(1);
 
+    // Close before rm to release WAL locks on Windows
+    newLogger.close();
     await rm(newDir, { recursive: true, force: true });
   });
 

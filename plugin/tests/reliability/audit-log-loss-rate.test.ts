@@ -14,6 +14,8 @@ describe('Audit Log Loss Rate (Reliability)', () => {
   });
 
   afterEach(async () => {
+    // Close sqlite store before rm to release WAL locks on Windows
+    logger.close();
     await rm(logDir, { recursive: true, force: true });
   });
 

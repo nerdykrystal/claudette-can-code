@@ -1,10 +1,10 @@
 // Final coverage pass: branches uncovered after the primary coverage rounds.
 // - bundle/index.ts:45 (no frontmatter opening `---` marker)
 // - bundle/index.ts:63-65 (frontmatter line with no colon)
-// - audit/index.ts:110-111 (mkdir failure in query())
-// - audit/index.ts:140-141 (readdirSync failure after mkdir succeeds)
+// - audit/index.ts: query() returns empty array on closed store; parseRow handles null stage
+//   Stage 05 update: JSONL mocks replaced with sqlite-based error path tests.
 
-import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -72,53 +72,48 @@ describe('Bundle frontmatter edge cases (lines 45, 63-65)', () => {
   });
 });
 
-describe('Audit Logger — query() mkdir + readdir failure paths (lines 110-111, 140-141)', () => {
-  afterEach(() => {
-    vi.resetModules();
-    vi.doUnmock('node:fs/promises');
-    vi.doUnmock('node:fs');
+describe('Audit Logger — query() error paths (sqlite-based, Stage 05)', () => {
+  let logDir: string;
+
+  beforeEach(async () => {
+    logDir = await mkdtemp(join(tmpdir(), 'cdcc-audit-readdir-err-'));
   });
 
-  it('lines 110-111: mkdir failure is caught; query() still returns empty array', async () => {
-    const realFsp = await vi.importActual<typeof import('node:fs/promises')>('node:fs/promises');
-    vi.doMock('node:fs/promises', () => ({
-      ...realFsp,
-      mkdir: async () => {
-        throw new Error('EACCES: simulated mkdir failure');
-      },
-      default: { ...realFsp },
-    }));
-    // Also stub readdirSync so the outer try reaches readdir and throws separately,
-    // BUT the mkdir catch on lines 110-111 is exercised regardless before readdir runs.
-    vi.resetModules();
-
-    const { AuditLogger } = await import('../../src/core/audit/index.js');
-    const logger = new AuditLogger('/nonexistent/path/that-would-never-exist');
-    const entries = await logger.query();
-    // mkdir throws → caught at 110-111 → readdirSync then also throws → caught at 140-141
-    // → empty array returned.
-    expect(entries).toEqual([]);
+  afterEach(async () => {
+    await rm(logDir, { recursive: true, force: true });
   });
 
-  it('lines 140-141: readdirSync throws (outer try catch) → empty array returned', async () => {
-    const realFs = await vi.importActual<typeof import('node:fs')>('node:fs');
-    // Override node:fs.readdirSync to throw. The audit module dynamically imports
-    // node:fs at call time; vi.doMock intercepts that dynamic import.
-    vi.doMock('node:fs', () => ({
-      ...realFs,
-      readdirSync: () => {
-        throw new Error('ENOENT: simulated readdir failure');
-      },
-      readFileSync: realFs.readFileSync,
-    }));
-    vi.resetModules();
-
-    const logDir = await mkdtemp(join(tmpdir(), 'cdcc-audit-readdir-err-'));
+  it('query() returns empty array when sqlite store is closed (iterate throws)', async () => {
     const { AuditLogger } = await import('../../src/core/audit/index.js');
     const logger = new AuditLogger(logDir);
+    logger.close();
     const entries = await logger.query();
-    // readdirSync throws → caught at 140-141 → empty array.
+    // iterate throws on closed DB → caught by outer try/catch → empty array
     expect(entries).toEqual([]);
-    await rm(logDir, { recursive: true, force: true });
+  });
+
+  it('query() with stage filter returns only matching entries', async () => {
+    const { AuditLogger } = await import('../../src/core/audit/index.js');
+    const logger = new AuditLogger(logDir);
+    await logger.log({
+      ts: '2026-04-24T00:00:00Z',
+      hookId: 'H1',
+      stage: 'stage-01',
+      decision: 'allow',
+      rationale: 'valid',
+      payload: {},
+    });
+    await logger.log({
+      ts: '2026-04-24T00:00:01Z',
+      hookId: 'H2',
+      stage: 'stage-02',
+      decision: 'allow',
+      rationale: 'other stage',
+      payload: {},
+    });
+    const filtered = await logger.query({ stage: 'stage-01' });
+    expect(filtered).toHaveLength(1);
+    expect(filtered[0].stage).toBe('stage-01');
+    logger.close();
   });
 });

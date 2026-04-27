@@ -10,10 +10,13 @@ import { homedir } from 'node:os';
 const USAGE = `cdcc — Claudette Can Code (Pro) Plugin MVP
 
 Usage:
-  cdcc generate <planning-dir>    Read 4-doc bundle; write plan.json; install hooks
-  cdcc dry-run  <planning-dir>    Validate bundle + preview plan; no disk writes
-  cdcc audit   [--since=ISO8601]  Query audit log
-  cdcc --help                     Show this message
+  cdcc generate <planning-dir>                   Read 4-doc bundle; write plan.json; install hooks
+  cdcc dry-run  <planning-dir>                   Validate bundle + preview plan; no disk writes
+  cdcc audit   [--since=ISO8601]                 Query audit log
+  cdcc migrate-audit-log [--source=<path>]       Migrate JSONL audit logs to sqlite
+                         [--target=<path>]
+                         [--resume]
+  cdcc --help                                    Show this message
 `;
 
 // Extract helper functions to reduce main() complexity
@@ -137,6 +140,71 @@ async function handleAudit(
   return 0;
 }
 
+/**
+ * Handle `cdcc migrate-audit-log` subcommand.
+ * Migrates JSONL audit logs to sqlite with byte-offset checkpointing.
+ * Per §3.05: default source glob <claudeRoot>/cdcc-audit/*.jsonl; default target audit.sqlite.
+ */
+async function handleMigrateAuditLog(
+  args: string[],
+  claudeRoot: string,
+): Promise<number> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { migrateJsonlToSqlite } = await import('../core/audit/index.js') as any;
+  const fg = await import('fast-glob');
+  const { join: pathJoin, resolve: pathResolve } = await import('node:path');
+
+  let sourcePath: string | undefined;
+  let targetPath: string | undefined;
+  let resume = false;
+
+  for (const arg of args) {
+    if (arg.startsWith('--source=')) sourcePath = arg.slice('--source='.length);
+    else if (arg.startsWith('--target=')) targetPath = arg.slice('--target='.length);
+    else if (arg === '--resume') resume = true;
+  }
+
+  const auditDir = pathJoin(claudeRoot, 'cdcc-audit');
+  const defaultTarget = pathJoin(auditDir, 'audit.sqlite');
+  const resolvedTarget = targetPath ? pathResolve(targetPath) : defaultTarget;
+
+  // Collect JSONL source files
+  const sources: string[] = sourcePath
+    ? [pathResolve(sourcePath)]
+    : await fg.default(pathJoin(auditDir, '*.jsonl').replace(/\\/g, '/'));
+
+  if (sources.length === 0) {
+    console.log(JSON.stringify({ ok: true, message: 'No JSONL source files found', rowsImported: 0 }));
+    return 0;
+  }
+
+  let totalRows = 0;
+  const errors: string[] = [];
+
+  for (const src of sources) {
+    const result = await migrateJsonlToSqlite({
+      jsonlPath: src,
+      dbPath: resolvedTarget,
+      resumeFrom: resume ? undefined : 0,
+    });
+    if (result.ok) {
+      totalRows += result.value.rowsImported;
+      console.log(JSON.stringify({ source: src, ...result.value }));
+    } else {
+      errors.push(`${src}: ${result.error.message}`);
+      console.error(JSON.stringify({ source: src, error: result.error }));
+    }
+  }
+
+  if (errors.length > 0) {
+    console.error(JSON.stringify({ errors }));
+    return 1;
+  }
+
+  console.log(JSON.stringify({ ok: true, totalRows, target: resolvedTarget }));
+  return 0;
+}
+
 async function main(): Promise<number> {
   // Parse command and args at runtime (not module load time) to support testing
   const [, , command, ...args] = process.argv;
@@ -179,6 +247,9 @@ async function main(): Promise<number> {
 
     case 'audit':
       return handleAudit(args, claudeRoot, AuditLogger);
+
+    case 'migrate-audit-log':
+      return handleMigrateAuditLog(args, claudeRoot);
 
     default:
       console.error(`cdcc: unknown command "${command ?? '(none)'}".\n\n${USAGE}`);

@@ -161,6 +161,7 @@ export async function handle(): Promise<void> {
     stderrWrite: (msg) => console.error(msg),
   });
 
+  auditLogger.close();
   process.exit(result.exitCode);
 }
 

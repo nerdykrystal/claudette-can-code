@@ -164,6 +164,7 @@ export async function handle(): Promise<void> {
     planStatePath,
   });
 
+  auditLogger.close();
   process.exit(result.exitCode);
 }
 

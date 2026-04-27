@@ -286,6 +286,7 @@ export async function handle(): Promise<void> {
     planDir,
   });
 
+  auditLogger.close();
   process.exit(result.exitCode);
 }
 
