@@ -407,4 +407,379 @@ name: BIDX
 
     rmSync(bidxDir, { recursive: true, force: true });
   });
+
+  it('should handle heading without ID prefix in markdown sections', () => {
+    const noIdDir = join(testFixturesDir, 'heading-no-id');
+    mkdirSync(noIdDir, { recursive: true });
+
+    const docWithoutIdPrefix = `---
+name: Doc
+---
+
+# Document Title
+
+## Just a heading without ID prefix
+Content here
+
+### PRD-FR-01: Requirement with ID
+More content
+`;
+
+    writeFileSync(join(noIdDir, 'CDCC_PRD_2026-04-26_v01_I.md'), docWithoutIdPrefix);
+    writeFileSync(
+      join(noIdDir, 'CDCC_TRD_2026-04-26_v01_I.md'),
+      docWithoutIdPrefix.replace(/PRD/g, 'TRD')
+    );
+    writeFileSync(
+      join(noIdDir, 'CDCC_AVD_2026-04-26_v01_I.md'),
+      docWithoutIdPrefix.replace(/PRD/g, 'AVD')
+    );
+    writeFileSync(
+      join(noIdDir, 'CDCC_TQCD_2026-04-26_v01_I.md'),
+      docWithoutIdPrefix.replace(/PRD/g, 'TQCD')
+    );
+    writeFileSync(
+      join(noIdDir, 'CDCC_UXD_2026-04-26_v01_I.md'),
+      docWithoutIdPrefix.replace(/PRD/g, 'UXD')
+    );
+    writeFileSync(
+      join(noIdDir, 'BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md'),
+      '---\nname: BIDX\n---\n# BIDX'
+    );
+
+    const result = parseBundle(noIdDir);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should still parse successfully, using full heading title as ID fallback
+      expect(result.value.prd.sections.length).toBeGreaterThan(0);
+    }
+
+    rmSync(noIdDir, { recursive: true, force: true });
+  });
+
+  it('should handle BIDX table with sparse columns (missing fields)', () => {
+    const sparseDir = join(testFixturesDir, 'bidx-sparse');
+    mkdirSync(sparseDir, { recursive: true });
+
+    const minimalDoc = `---
+name: Doc
+---
+
+### ID-FR-01: Requirement
+Content
+`;
+
+    writeFileSync(join(sparseDir, 'CDCC_PRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(sparseDir, 'CDCC_TRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(sparseDir, 'CDCC_AVD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(sparseDir, 'CDCC_TQCD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(sparseDir, 'CDCC_UXD_2026-04-26_v01_I.md'), minimalDoc);
+
+    // BIDX with sparse table (columns may be empty or missing)
+    const bidxSparse = `---
+name: BIDX
+---
+
+# BIDX
+
+## BIDX-4 Cross-reference matrix
+
+| Source | Closes gate-22 finding | TRD | AVD |
+|---|---|---|---|
+| PRD-SO-01 | C-1 | TRD-FR-01 | AVD-AC-01 |
+| PRD-SO-02 | H-5 | TRD-FR-02 | AVD-AC-02 |
+`;
+    writeFileSync(join(sparseDir, 'BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md'), bidxSparse);
+
+    const result = parseBundle(sparseDir);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should handle sparse columns gracefully
+      expect(result.value.bidx.rows.length).toBeGreaterThanOrEqual(2);
+    }
+
+    rmSync(sparseDir, { recursive: true, force: true });
+  });
+
+  it('should handle heading with special characters (regex edge case)', () => {
+    const specialDir = join(testFixturesDir, 'heading-special');
+    mkdirSync(specialDir, { recursive: true });
+
+    const docWithSpecial = `---
+name: Doc
+---
+
+### PRD-FR-01: Requirement (with parens) [and brackets]
+Content
+
+### 123-No-Prefix: This starts with numbers
+More content
+
+### PRD-AR-02.1-Extended: Dotted notation
+Content
+
+### TQCD-NFR-3.1-01: Complex ID format
+More content
+`;
+
+    writeFileSync(join(specialDir, 'CDCC_PRD_2026-04-26_v01_I.md'), docWithSpecial);
+    writeFileSync(
+      join(specialDir, 'CDCC_TRD_2026-04-26_v01_I.md'),
+      docWithSpecial.replace(/PRD/g, 'TRD').replace(/TQCD/g, 'TRD')
+    );
+    writeFileSync(
+      join(specialDir, 'CDCC_AVD_2026-04-26_v01_I.md'),
+      docWithSpecial.replace(/PRD/g, 'AVD').replace(/TQCD/g, 'AVD')
+    );
+    writeFileSync(
+      join(specialDir, 'CDCC_TQCD_2026-04-26_v01_I.md'),
+      docWithSpecial
+    );
+    writeFileSync(
+      join(specialDir, 'CDCC_UXD_2026-04-26_v01_I.md'),
+      docWithSpecial.replace(/PRD/g, 'UXD').replace(/TQCD/g, 'UXD')
+    );
+    writeFileSync(
+      join(specialDir, 'BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md'),
+      '---\nname: BIDX\n---\n# BIDX'
+    );
+
+    const result = parseBundle(specialDir);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should extract IDs correctly, handling edge cases
+      expect(result.value.prd.ids).toContain('PRD-FR-01');
+      // The regex extracts up to the first non-ID character
+      expect(result.value.prd.ids.length).toBeGreaterThan(0);
+    }
+
+    rmSync(specialDir, { recursive: true, force: true });
+  });
+
+  it('should handle BIDX table without BIDX-4 section header', () => {
+    const noBidx4Dir = join(testFixturesDir, 'bidx-no-section');
+    mkdirSync(noBidx4Dir, { recursive: true });
+
+    const minimalDoc = `---
+name: Doc
+---
+
+### ID-FR-01: Requirement
+Content
+`;
+
+    writeFileSync(join(noBidx4Dir, 'CDCC_PRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(noBidx4Dir, 'CDCC_TRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(noBidx4Dir, 'CDCC_AVD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(noBidx4Dir, 'CDCC_TQCD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(noBidx4Dir, 'CDCC_UXD_2026-04-26_v01_I.md'), minimalDoc);
+
+    // BIDX with no BIDX-4 section header
+    const bidxNoSection = `---
+name: BIDX
+---
+
+# BIDX
+
+## Some Other Section
+
+| Source | Findings |
+|---|---|
+| PRD-SO-01 | C-1 |
+`;
+    writeFileSync(join(noBidx4Dir, 'BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md'), bidxNoSection);
+
+    const result = parseBundle(noBidx4Dir);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should succeed even if BIDX-4 section not found (returns empty rows)
+      expect(result.value.bidx.rows.length).toBe(0);
+    }
+
+    rmSync(noBidx4Dir, { recursive: true, force: true });
+  });
+
+  it('should handle multiple finding codes in single BIDX cell', () => {
+    const multiDir = join(testFixturesDir, 'bidx-multi-findings');
+    mkdirSync(multiDir, { recursive: true });
+
+    const minimalDoc = `---
+name: Doc
+---
+
+### ID-FR-01: Requirement
+Content
+`;
+
+    writeFileSync(join(multiDir, 'CDCC_PRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(multiDir, 'CDCC_TRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(multiDir, 'CDCC_AVD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(multiDir, 'CDCC_TQCD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(multiDir, 'CDCC_UXD_2026-04-26_v01_I.md'), minimalDoc);
+
+    // BIDX with multiple findings per cell
+    const bidxMulti = `---
+name: BIDX
+---
+
+# BIDX
+
+## BIDX-4 Cross-reference matrix
+
+| Source | Closes gate-22 finding | TRD-FR | AVD |
+|---|---|---|---|
+| PRD-SO-01 | C-1, M-5, H-2 | TRD-FR-01 | AVD-AC-01 |
+| PRD-SO-02 | H-1, H-3, H-4 | TRD-FR-02 | AVD-AC-02 |
+`;
+    writeFileSync(join(multiDir, 'BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md'), bidxMulti);
+
+    const result = parseBundle(multiDir);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should parse multiple findings from one cell (6 findings total)
+      expect(result.value.bidx.rows.length).toBe(6);
+      const findings = result.value.bidx.rows.map(r => r.closesFinding);
+      expect(findings).toContain('C-1');
+      expect(findings).toContain('M-5');
+      expect(findings).toContain('H-2');
+    }
+
+    rmSync(multiDir, { recursive: true, force: true });
+  });
+
+  it('should handle edge case: long finding code substring truncation', () => {
+    const longDir = join(testFixturesDir, 'bidx-long-fields');
+    mkdirSync(longDir, { recursive: true });
+
+    const minimalDoc = `---
+name: Doc
+---
+
+### ID-FR-01: Requirement
+Content
+`;
+
+    writeFileSync(join(longDir, 'CDCC_PRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(longDir, 'CDCC_TRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(longDir, 'CDCC_AVD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(longDir, 'CDCC_TQCD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(longDir, 'CDCC_UXD_2026-04-26_v01_I.md'), minimalDoc);
+
+    // BIDX with very long field values (tests substring(0, 20) truncation)
+    const bidxLong = `---
+name: BIDX
+---
+
+# BIDX
+
+## BIDX-4 Cross-reference matrix
+
+| Source | Closes gate-22 finding | TRD-FR | AVD |
+|---|---|---|---|
+| PRD-SO-VERY-VERY-VERY-LONG-VALUE | C-1 | TRD-FR-VERYLONGFR-01 | AVD-AC-VERYLONGAC-01 |
+`;
+    writeFileSync(join(longDir, 'BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md'), bidxLong);
+
+    const result = parseBundle(longDir);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should truncate to 20 chars for via, doc, sectionId fields
+      expect(result.value.bidx.rows.length).toBeGreaterThan(0);
+      const row = result.value.bidx.rows[0];
+      expect(row.via.length).toBeLessThanOrEqual(20);
+      expect(row.doc.length).toBeLessThanOrEqual(20);
+      expect(row.sectionId.length).toBeLessThanOrEqual(20);
+    }
+
+    rmSync(longDir, { recursive: true, force: true });
+  });
+
+  it('should handle BIDX table row with very few columns (parts.length < 3)', () => {
+    const fewColsDir = join(testFixturesDir, 'bidx-few-cols');
+    mkdirSync(fewColsDir, { recursive: true });
+
+    const minimalDoc = `---
+name: Doc
+---
+
+### ID-FR-01: Requirement
+Content
+`;
+
+    writeFileSync(join(fewColsDir, 'CDCC_PRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(fewColsDir, 'CDCC_TRD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(fewColsDir, 'CDCC_AVD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(fewColsDir, 'CDCC_TQCD_2026-04-26_v01_I.md'), minimalDoc);
+    writeFileSync(join(fewColsDir, 'CDCC_UXD_2026-04-26_v01_I.md'), minimalDoc);
+
+    // BIDX with rows that have fewer than 3 columns (should be skipped)
+    const bidxFewCols = `---
+name: BIDX
+---
+
+# BIDX
+
+## BIDX-4 Cross-reference matrix
+
+| Source |
+|---|
+| PRD-SO-01 |
+| Single |
+`;
+    writeFileSync(join(fewColsDir, 'BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md'), bidxFewCols);
+
+    const result = parseBundle(fewColsDir);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should skip rows with < 3 columns gracefully
+      expect(result.value.bidx.rows.length).toBe(0);
+    }
+
+    rmSync(fewColsDir, { recursive: true, force: true });
+  });
+
+  it('should handle heading match when regex returns null (line 195 branch)', () => {
+    const noHeadingDir = join(testFixturesDir, 'no-proper-headings');
+    mkdirSync(noHeadingDir, { recursive: true });
+
+    const docOnlyBody = `---
+name: Doc
+---
+
+This is just regular text
+No markdown headings here
+### But this is a heading with no structure
+`;
+
+    writeFileSync(join(noHeadingDir, 'CDCC_PRD_2026-04-26_v01_I.md'), docOnlyBody);
+    writeFileSync(
+      join(noHeadingDir, 'CDCC_TRD_2026-04-26_v01_I.md'),
+      docOnlyBody
+    );
+    writeFileSync(
+      join(noHeadingDir, 'CDCC_AVD_2026-04-26_v01_I.md'),
+      docOnlyBody
+    );
+    writeFileSync(
+      join(noHeadingDir, 'CDCC_TQCD_2026-04-26_v01_I.md'),
+      docOnlyBody
+    );
+    writeFileSync(
+      join(noHeadingDir, 'CDCC_UXD_2026-04-26_v01_I.md'),
+      docOnlyBody
+    );
+    writeFileSync(
+      join(noHeadingDir, 'BIDX_cdcc-v1.1.0_2026-04-26_v01_I.md'),
+      '---\nname: BIDX\n---\n# BIDX'
+    );
+
+    const result = parseBundle(noHeadingDir);
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      // Should parse without finding any structured IDs
+      expect(result.value.prd.sections.length).toBeGreaterThanOrEqual(1);
+    }
+
+    rmSync(noHeadingDir, { recursive: true, force: true });
+  });
 });
