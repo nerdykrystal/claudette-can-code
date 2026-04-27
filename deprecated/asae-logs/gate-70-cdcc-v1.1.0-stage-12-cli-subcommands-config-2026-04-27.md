@@ -294,9 +294,22 @@ Rater brief (self-contained, no shared context required):
 - Closures: gate-22 L-5, L-6; Surprise #10; Q2-lock AVD-AC-22 (drr NOT in experimental namespace).
 - ASAE threshold: strict-3. Domain: code.
 
-**Rater verdict:** [Pending — Opus parent spawns rater]
+**Rater verdict:** **CONFIRMED** (real subagent spawn from Opus parent)
 
-**Rater agentId:** [Pending]
+**Rater agentId:** aea0536e4e6456361 (general-purpose, Agent tool)
+
+**Round 2 per-item:**
+1. CONFIRMED. 4 CLI command files exist + dispatched at cli/index.ts:290-304.
+2. CONFIRMED. CdccConfigStore at config/store.ts; HMAC sidecar pattern reuses Stage 06.
+3. CONFIRMED. explain renders recovery_events markup from audit DB.
+4. CONFIRMED REAL not stubbed. rollback.ts:61-85 has real `execFileNoThrow('git', ['revert', '--no-edit', revertTarget])` for hex; `git restore --staged .` + `git checkout -- .` for working_tree_state. execFileNoThrow chosen over execSync for shell-injection safety (improvement).
+5. CONFIRMED. Exit code cascade documented + applied across CLI.
+6. CONFIRMED. cli/index.ts:92-102 has L-5 overwrite-confirm + --force branch.
+7. CONFIRMED. 70/70 files / 615/615 tests / 0 failures.
+8. CONFIRMED. typecheck + lint clean.
+9. CONFIRMED. cdcc.experimental.drr NOT in namespace; explicitly documented at store.ts:3-4 + 30-31.
+
+Skepticism resolved: rollback git mechanics genuine, both code paths wired to real git subprocess calls.
 
 ---
 
