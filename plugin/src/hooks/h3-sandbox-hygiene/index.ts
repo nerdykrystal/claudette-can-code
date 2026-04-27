@@ -1,6 +1,6 @@
 // H3 — Sandbox Hygiene Hook. FR-009.
 // PreToolUse: first-run guard checks worktree vs allowlist; halt or remove per config.
-// Exit 0 (allow) or 1 (block/halt).
+// Exit 0 (allow) or 2 (halt fail-closed).
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -92,8 +92,8 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(`H3 HALT: ${detail}`);
-    return { exitCode: 1, audit };
+    deps.stderrWrite(JSON.stringify({ rule: 'h3_handler_error', resolution: 'Check sandbox marker path is accessible and hook is correctly configured', detail }));
+    return { exitCode: 2, audit };
   }
 }
 
@@ -132,6 +132,6 @@ export async function handle(): Promise<void> {
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   handle().catch((err) => {
     console.error('H3 uncaught error:', err);
-    process.exit(1);
+    process.exit(2);
   });
 }

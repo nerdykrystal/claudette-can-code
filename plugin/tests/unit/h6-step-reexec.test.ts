@@ -112,9 +112,9 @@ describe('H6 Step-Re-Execution Guard (ASAE Aspect 13 / FM-1.3)', () => {
       },
     });
     const result = await handleImpl(deps);
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
-    expect(stderrOutput[0]).toContain('H6 BLOCK');
+    expect(stderrOutput[0]).toContain('h6_step_reexec_unauthorized');
     expect(appended).toHaveLength(0);
   });
 
@@ -240,9 +240,9 @@ describe('H6 Step-Re-Execution Guard (ASAE Aspect 13 / FM-1.3)', () => {
       stdinReader: async () => 'not-json {',
     });
     const result = await handleImpl(deps);
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
-    expect(stderrOutput[0]).toContain('H6 HALT');
+    expect(stderrOutput[0]).toContain('h6_handler_error');
   });
 
   it('append failure does not flip primary allow decision', async () => {
@@ -280,7 +280,7 @@ describe('H6 Step-Re-Execution Guard (ASAE Aspect 13 / FM-1.3)', () => {
       },
     });
     const result = await handleImpl(deps);
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 
@@ -314,7 +314,7 @@ describe('H6 Step-Re-Execution Guard (ASAE Aspect 13 / FM-1.3)', () => {
       },
     });
     const result = await handleImpl(deps);
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 
@@ -399,7 +399,7 @@ describe('H6 Step-Re-Execution Guard (ASAE Aspect 13 / FM-1.3)', () => {
       },
     });
     const result = await handleImpl(deps);
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 

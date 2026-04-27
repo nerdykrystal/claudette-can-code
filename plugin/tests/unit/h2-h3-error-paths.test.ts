@@ -45,7 +45,7 @@ describe('H2 Deviation Manifest — valid-manifest allow path (lines 100-111)', 
 });
 
 describe('H3 Sandbox Hygiene — outer-catch halt path (lines 81-93)', () => {
-  it('returns halt with exit 1 when auditLogger.log throws from within the happy path', async () => {
+  it('returns halt with exit 2 when auditLogger.log throws from within the happy path', async () => {
     // To reach the outer catch on lines 81-93, an exception must escape the inner flow.
     // auditLogger.log is called unconditionally in the happy path; throw on call #1
     // (happy-path log) but succeed on call #2 (catch-block log) so handleImpl can
@@ -83,11 +83,11 @@ describe('H3 Sandbox Hygiene — outer-catch halt path (lines 81-93)', () => {
 
     const result = await h3HandleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
     expect(result.audit.rationale).toContain('H3 handler error');
     expect(result.audit.rationale).toContain('audit log disk full');
-    expect(stderrCalls.some((m) => m.startsWith('H3 HALT'))).toBe(true);
+    expect(stderrCalls.some((m) => m.includes('h3_handler_error'))).toBe(true);
   });
 
   it('auditLogger.log throw in the second (catch-block) invocation still yields a handler result', async () => {

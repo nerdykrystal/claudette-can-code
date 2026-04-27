@@ -2,7 +2,7 @@
 //   if (import.meta.url === pathToFileURL(process.argv[1]).href) {
 //     handle().catch((err) => {
 //       console.error('<HID> uncaught error:', err);
-//       process.exit(1);
+//       process.exit(2);
 //     });
 //   }
 //
@@ -186,7 +186,7 @@ describe('Hook entry-point IIFE .catch callback bodies (in-process)', () => {
     // from inside the IIFE .catch.
     const iifeFired =
       (consoleCap?.errors ?? []).some((e) => e.includes('H1 uncaught error:')) ||
-      (exit?.calls ?? []).includes(1);
+      (exit?.calls ?? []).includes(2);
     expect(iifeFired).toBe(true);
   });
 
@@ -195,7 +195,7 @@ describe('Hook entry-point IIFE .catch callback bodies (in-process)', () => {
     await importHookWithForcedReject(HOOK_SRC.h2, '../../src/hooks/h2-deviation-manifest/index.js');
     const iifeFired =
       (consoleCap?.errors ?? []).some((e) => e.includes('H2 uncaught error:')) ||
-      (exit?.calls ?? []).includes(1);
+      (exit?.calls ?? []).includes(2);
     expect(iifeFired).toBe(true);
   });
 
@@ -203,7 +203,7 @@ describe('Hook entry-point IIFE .catch callback bodies (in-process)', () => {
     await importHookWithForcedReject(HOOK_SRC.h3, '../../src/hooks/h3-sandbox-hygiene/index.js');
     const iifeFired =
       (consoleCap?.errors ?? []).some((e) => e.includes('H3 uncaught error:')) ||
-      (exit?.calls ?? []).includes(1);
+      (exit?.calls ?? []).includes(2);
     expect(iifeFired).toBe(true);
   });
 
@@ -212,7 +212,7 @@ describe('Hook entry-point IIFE .catch callback bodies (in-process)', () => {
     await importHookWithForcedReject(HOOK_SRC.h4, '../../src/hooks/h4-model-assignment/index.js');
     const iifeFired =
       (consoleCap?.errors ?? []).some((e) => e.includes('H4 uncaught error:')) ||
-      (exit?.calls ?? []).includes(1);
+      (exit?.calls ?? []).includes(2);
     expect(iifeFired).toBe(true);
   });
 
@@ -221,7 +221,7 @@ describe('Hook entry-point IIFE .catch callback bodies (in-process)', () => {
     await importHookWithForcedReject(HOOK_SRC.h5, '../../src/hooks/h5-gate-result/index.js');
     const iifeFired =
       (consoleCap?.errors ?? []).some((e) => e.includes('H5 uncaught error:')) ||
-      (exit?.calls ?? []).includes(1);
+      (exit?.calls ?? []).includes(2);
     expect(iifeFired).toBe(true);
   });
 });

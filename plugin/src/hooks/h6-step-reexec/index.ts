@@ -4,7 +4,7 @@
 // Pairs with commit-msg hook v05 Tier 1c-extended mode-conditional (the
 // commit-time backstop). See `_grand_repo/docs/CDCC_H6_Spec_2026-04-26_v01_I.md`.
 //
-// Exit codes: 0 (allow) or 1 (block / halt).
+// Exit codes: 0 (allow) or 2 (block / halt fail-closed).
 
 import { readFile, mkdir, appendFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
@@ -178,16 +178,12 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
     }
 
     // Re-execution without authorization: block
-    const message =
-      `H6 BLOCK: Step re-execution detected without authorization.\n` +
-      `  step_id:        ${identity.step_id}\n` +
-      `  hash_of_inputs: ${identity.hash_of_inputs}\n` +
-      `\n` +
-      `Either (a) author a gate audit log declaring step_re_execution and place a\n` +
-      `matching trailer at <plan_dir>/cdcc-step-reexec-authorization.txt of the form:\n` +
-      `  Step-Re-Execution: gate-NN reason "<rationale>"\n` +
-      `or (b) recognize this is an unauthorized repetition and avoid it.`;
-    deps.stderrWrite(message);
+    deps.stderrWrite(JSON.stringify({
+      rule: 'h6_step_reexec_unauthorized',
+      resolution: 'Author a gate audit log declaring step_re_execution and place a matching trailer at <plan_dir>/cdcc-step-reexec-authorization.txt',
+      step_id: identity.step_id,
+      hash_of_inputs: identity.hash_of_inputs,
+    }));
 
     const audit: AuditLogEntry = {
       ts,
@@ -204,7 +200,7 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       },
     };
     await deps.auditLogger.log(audit);
-    return { exitCode: 1, audit };
+    return { exitCode: 2, audit };
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
     const audit: AuditLogEntry = {
@@ -216,8 +212,8 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(`H6 HALT: ${detail}`);
-    return { exitCode: 1, audit };
+    deps.stderrWrite(JSON.stringify({ rule: 'h6_handler_error', resolution: 'Check stdin is valid JSON and hook is correctly configured', detail }));
+    return { exitCode: 2, audit };
   }
 }
 
@@ -295,6 +291,6 @@ export async function handle(): Promise<void> {
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   handle().catch((err) => {
     console.error('H6 uncaught error:', err);
-    process.exit(1);
+    process.exit(2);
   });
 }

@@ -74,15 +74,15 @@ describe('Hook handle() block paths — inner arrow invocation + default branche
       'utf-8',
     );
     const { handle } = await import('../../src/hooks/h1-input-manifest/index.js');
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
-    expect(exitCapture).toBe(1);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
+    expect(exitCapture).toBe(2);
   });
 
   it('H2 handle() block path on BUILD_COMPLETE without deviationManifest', async () => {
     pipeFakeStdin('BUILD_COMPLETE reached at stage qa');
     const { handle } = await import('../../src/hooks/h2-deviation-manifest/index.js');
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
-    expect(exitCapture).toBe(1);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
+    expect(exitCapture).toBe(2);
   });
 
   it('H3 handle() halt path via auditLogger throw (stderrWrite invoked)', async () => {
@@ -175,14 +175,14 @@ describe('Hook handle() block paths — inner arrow invocation + default branche
       }),
     );
     const { handle } = await import('../../src/hooks/h5-gate-result/index.js');
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
-    expect(exitCapture).toBe(1);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
+    expect(exitCapture).toBe(2);
   });
 
   it('H5 handle() block path on malformed gate result (invalid JSON)', async () => {
     pipeFakeStdin('not-json-at-all');
     const { handle } = await import('../../src/hooks/h5-gate-result/index.js');
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
-    expect(exitCapture).toBe(1);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
+    expect(exitCapture).toBe(2);
   });
 });

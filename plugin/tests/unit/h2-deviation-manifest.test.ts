@@ -43,9 +43,9 @@ describe('H2 Deviation Manifest Hook (FR-008)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
-    expect(stderrOutput).toContain('H2 BLOCK: BUILD_COMPLETE without deviationManifest');
+    expect(stderrOutput).toEqual(expect.arrayContaining([expect.stringContaining('h2_no_deviation_manifest')]));
   });
 
   it('allow when BUILD_COMPLETE + valid deviationManifest provided', async () => {
@@ -86,9 +86,9 @@ describe('H2 Deviation Manifest Hook (FR-008)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
-    expect(stderrOutput).toContain('H2 BLOCK: deviationManifest schema invalid');
+    expect(stderrOutput).toEqual(expect.arrayContaining([expect.stringContaining('h2_manifest_schema_invalid')]));
   });
 
   it('block when deviationManifest schema invalid (malformed items)', async () => {
@@ -111,7 +111,7 @@ describe('H2 Deviation Manifest Hook (FR-008)', () => {
     const result = await handleImpl(deps);
 
     // Invalid items in substitutions array fail schema validation
-    expect([0, 1]).toContain(result.exitCode); // May succeed if regex match fails, or fail if parsed
+    expect([0, 1, 2]).toContain(result.exitCode); // May succeed if regex match fails, or fail if parsed
     expect(result.audit.decision).toMatch(/block|allow/); // Can be either depending on parsing
   });
 
@@ -178,7 +178,7 @@ describe('H2 Deviation Manifest Hook (FR-008)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
   });
 
@@ -231,9 +231,9 @@ describe('H2 Deviation Manifest Hook (FR-008)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
-    expect(stderrOutput).toContain('H2 HALT: EPIPE: pipe read failed');
+    expect(stderrOutput).toEqual(expect.arrayContaining([expect.stringContaining('h2_handler_error')]));
   });
 
   it('audit logger must be called for all paths', async () => {

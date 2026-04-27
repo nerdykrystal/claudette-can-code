@@ -1,6 +1,6 @@
 // H1 — Input Manifest Hook. FR-007.
 // UserPromptSubmit: validates ambient filesystem against plan inputManifest.
-// Exit 0 (allow) or 1 (block).
+// Exit 0 (allow) or 2 (block/halt fail-closed).
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -28,7 +28,7 @@ export interface HandleResult {
 /**
  * H1 handler: read expected InputManifest from plan state via PlanStateStore (HMAC verify).
  * Compare to ambient file set (minimal MVP: just log the manifest as-is).
- * On mismatch: block (exit 1). Else allow (exit 0).
+ * On mismatch: block (exit 2). Else allow (exit 0).
  */
 export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
   const ts = new Date().toISOString();
@@ -73,8 +73,8 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
         payload: { plan: plan.stages ?? [] },
       };
       await deps.auditLogger.log(audit);
-      deps.stderrWrite('H1 BLOCK: No input manifest in plan state');
-      return { exitCode: 1, audit };
+      deps.stderrWrite(JSON.stringify({ rule: 'h1_no_input_manifest', resolution: 'Add inputManifest to plan stages', detected_value: 'no stages with non-empty inputManifest' }));
+      return { exitCode: 2, audit };
     }
   } catch (err) {
     const detail = err instanceof Error ? err.message : String(err);
@@ -87,8 +87,8 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(`H1 HALT: ${detail}`);
-    return { exitCode: 1, audit };
+    deps.stderrWrite(JSON.stringify({ rule: 'h1_handler_error', resolution: 'Check plan-state.json is present and valid', detail }));
+    return { exitCode: 2, audit };
   }
 }
 
@@ -120,6 +120,6 @@ export async function handle(): Promise<void> {
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   handle().catch((err) => {
     console.error('H1 uncaught error:', err);
-    process.exit(1);
+    process.exit(2);
   });
 }

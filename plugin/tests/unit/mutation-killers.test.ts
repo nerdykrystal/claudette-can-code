@@ -129,7 +129,7 @@ describe('Backwards-planning mutation killers — exact stage strings', () => {
 });
 
 describe('H1 mutation killers — exact stderr/rationale strings', () => {
-  it('block path stderr starts with "H1 BLOCK:" and rationale matches', async () => {
+  it('block path stderr contains h1_no_input_manifest rule and rationale matches', async () => {
     const stderr: string[] = [];
     const result = await h1Impl({
       readFile: async () => JSON.stringify({ stages: [] }),
@@ -140,12 +140,12 @@ describe('H1 mutation killers — exact stderr/rationale strings', () => {
       stderrWrite: (m) => stderr.push(m),
       planStatePath: '/fake/plan-state.json',
     });
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.rationale).toBe('No input manifest declared in plan');
-    expect(stderr).toEqual(['H1 BLOCK: No input manifest in plan state']);
+    expect(stderr).toEqual(expect.arrayContaining([expect.stringContaining('h1_no_input_manifest')]));
   });
 
-  it('halt path stderr starts with "H1 HALT:" prefix', async () => {
+  it('halt path stderr contains h1_handler_error rule', async () => {
     const stderr: string[] = [];
     const result = await h1Impl({
       readFile: async () => 'not-json',
@@ -156,9 +156,9 @@ describe('H1 mutation killers — exact stderr/rationale strings', () => {
       stderrWrite: (m) => stderr.push(m),
       planStatePath: '/fake/plan-state.json',
     });
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
-    expect(stderr.some((m) => m.startsWith('H1 HALT:'))).toBe(true);
+    expect(stderr.some((m) => m.includes('h1_handler_error'))).toBe(true);
   });
 
   it('allow path rationale is "Input manifest found and non-empty"', async () => {
@@ -180,7 +180,7 @@ describe('H1 mutation killers — exact stderr/rationale strings', () => {
 });
 
 describe('H2 mutation killers — exact rationales + stderr', () => {
-  it('block-no-manifest stderr is exactly "H2 BLOCK: BUILD_COMPLETE without deviationManifest"', async () => {
+  it('block-no-manifest stderr contains h2_no_deviation_manifest rule and rationale matches', async () => {
     const stderr: string[] = [];
     const result = await h2Impl({
       stdinReader: async () => 'BUILD_COMPLETE without manifest',
@@ -190,11 +190,11 @@ describe('H2 mutation killers — exact rationales + stderr', () => {
       },
       stderrWrite: (m) => stderr.push(m),
     });
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.rationale).toBe(
       'BUILD_COMPLETE detected but no deviationManifest provided',
     );
-    expect(stderr).toEqual(['H2 BLOCK: BUILD_COMPLETE without deviationManifest']);
+    expect(stderr).toEqual(expect.arrayContaining([expect.stringContaining('h2_no_deviation_manifest')]));
   });
 
   it('allow-no-build-complete rationale is exactly "No BUILD_COMPLETE sentinel detected"', async () => {
@@ -268,7 +268,7 @@ describe('H3 mutation killers — exact rationales + stderr', () => {
     expect(result.audit.rationale).toBe('Sandbox already scanned; short-circuit allow');
   });
 
-  it('halt path stderr prefix is "H3 HALT:" exactly', async () => {
+  it('halt path stderr contains h3_handler_error rule', async () => {
     let logCall = 0;
     const oneShot: AuditLogger = {
       log: async () => {
@@ -294,9 +294,9 @@ describe('H3 mutation killers — exact rationales + stderr', () => {
       stderrWrite: (m) => stderr.push(m),
       sandboxMarkerPath: '/fake/marker',
     });
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
-    expect(stderr.some((m) => m.startsWith('H3 HALT:'))).toBe(true);
+    expect(stderr.some((m) => m.includes('h3_handler_error'))).toBe(true);
   });
 });
 
@@ -424,7 +424,7 @@ describe('H5 mutation killers — exact rationales + stderr', () => {
     expect(result.audit.rationale).toBe('Stage converged per Convergence Gate Engine');
   });
 
-  it('not-converged block stderr starts with "H5 BLOCK: Stage not converged."', async () => {
+  it('not-converged block stderr contains h5_not_converged rule and rationale matches', async () => {
     const stderr: string[] = [];
     const result = await h5Impl({
       stdinReader: async () =>
@@ -439,12 +439,12 @@ describe('H5 mutation killers — exact rationales + stderr', () => {
       },
       stderrWrite: (m) => stderr.push(m),
     });
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.rationale).toBe(
       'Stage not converged; findings must be remediated',
     );
-    expect(stderr.some((m) => m.startsWith('H5 BLOCK: Stage not converged.'))).toBe(true);
-    // Findings summary lines have format "[SEVERITY] message"
+    expect(stderr.some((m) => m.includes('h5_not_converged'))).toBe(true);
+    // findings field in JSON stderr includes the summary
     expect(stderr.some((m) => m.includes('[CRITICAL] sample'))).toBe(true);
   });
 
@@ -458,14 +458,14 @@ describe('H5 mutation killers — exact rationales + stderr', () => {
       },
       stderrWrite: (m) => stderr.push(m),
     });
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.rationale).toBe(
       'Could not parse ConvergenceGateResult from stdin',
     );
-    expect(stderr).toEqual(['H5 BLOCK: Could not parse gate result']);
+    expect(stderr).toEqual(expect.arrayContaining([expect.stringContaining('h5_parse_error')]));
   });
 
-  it('schema-invalid block stderr is exactly "H5 BLOCK: Gate result schema invalid"', async () => {
+  it('schema-invalid block stderr contains h5_schema_invalid rule', async () => {
     const stderr: string[] = [];
     const result = await h5Impl({
       stdinReader: async () =>
@@ -477,9 +477,9 @@ describe('H5 mutation killers — exact rationales + stderr', () => {
       },
       stderrWrite: (m) => stderr.push(m),
     });
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
-    expect(stderr).toEqual(['H5 BLOCK: Gate result schema invalid']);
+    expect(stderr).toEqual(expect.arrayContaining([expect.stringContaining('h5_schema_invalid')]));
   });
 });
 

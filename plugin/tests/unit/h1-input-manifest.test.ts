@@ -53,9 +53,9 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
-    expect(stderrCalls).toEqual(expect.arrayContaining([expect.stringContaining('H1 BLOCK')]));
+    expect(stderrCalls).toEqual(expect.arrayContaining([expect.stringContaining('h1_no_input_manifest')]));
   });
 
   it('block when manifest is empty array', async () => {
@@ -75,7 +75,7 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 
@@ -94,7 +94,7 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
     expect(result.audit.rationale).toContain('H1 handler error');
   });
@@ -116,7 +116,7 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
   });
 
@@ -211,7 +211,7 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
     expect(result.audit.rationale).toBe('No input manifest declared in plan');
   });
@@ -233,7 +233,7 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 
@@ -252,7 +252,7 @@ describe('H1 Input Manifest Hook (FR-007)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 });

@@ -68,9 +68,9 @@ describe('Hook handle() env default branches — CLAUDE_ROOT unset (uses homedir
   it('H1 handle() halts when plan-state.json is absent (CLAUDE_ROOT empty)', async () => {
     const { handle } = await import('../../src/hooks/h1-input-manifest/index.js');
     // handle() reads <CLAUDE_ROOT>/plugins/cdcc/plan-state.json which doesn't
-    // exist → ENOENT caught by handleImpl outer catch → halt → process.exit(1)
+    // exist → ENOENT caught by handleImpl outer catch → halt → process.exit(2)
     // → our stub throws.
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
   });
 
   it('H2 handle() halts when plan-state.json is absent (CLAUDE_ROOT empty)', async () => {
@@ -143,7 +143,7 @@ describe('handleImpl outer-catch String(err) non-Error branch', () => {
       planStatePath: planPath,
     });
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
     expect(result.audit.rationale).toContain('non-error-thrown-value');
   });
@@ -191,7 +191,7 @@ describe('handleImpl outer-catch String(err) non-Error branch', () => {
       },
     });
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
     expect(result.audit.rationale).toContain('non-error-thrown-value');
   });

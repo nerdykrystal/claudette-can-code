@@ -1,6 +1,6 @@
 // H2 — Deviation Manifest Hook. FR-008.
 // Stop hook (BUILD_COMPLETE sentinel): requires signed DeviationManifest for detected substitution.
-// Exit 0 (allow) or 1 (block).
+// Exit 0 (allow) or 2 (block/halt fail-closed).
 
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -48,9 +48,9 @@ export interface HandleResult {
 
 /**
  * H2 handler: on Stop with BUILD_COMPLETE substring, check for deviationManifest.
- * If substitution detected and no manifest: block (exit 1).
+ * If substitution detected and no manifest: block (exit 2).
  * If manifest provided and valid: allow (exit 0).
- * Else block.
+ * Else block (exit 2).
  */
 export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
   const ts = new Date().toISOString();
@@ -75,15 +75,29 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
           payload: { buildComplete: true, hasManifest: false },
         };
         await deps.auditLogger.log(audit);
-        deps.stderrWrite('H2 BLOCK: BUILD_COMPLETE without deviationManifest');
-        return { exitCode: 1, audit };
+        deps.stderrWrite(JSON.stringify({ rule: 'h2_no_deviation_manifest', resolution: 'Provide a deviationManifest field in the BUILD_COMPLETE payload', detected_value: 'BUILD_COMPLETE without deviationManifest' }));
+        return { exitCode: 2, audit };
       }
 
       // Try to parse manifest
       try {
         const manifestMatch = payload.match(/"deviationManifest"\s*:\s*({[^}]*})/);
         if (manifestMatch) {
-          const manifest = JSON.parse(manifestMatch[1]);
+          const manifest = JSON.parse(manifestMatch[1]) as { substitutions?: unknown };
+          // Gate-22 H-2 guard: substitutions must be a non-null array (null literal bypasses Array.isArray check)
+          if (!Array.isArray(manifest.substitutions) || manifest.substitutions === null) {
+            const audit: AuditLogEntry = {
+              ts,
+              hookId: 'H2',
+              stage: null,
+              decision: 'block',
+              rationale: 'deviationManifest schema invalid: substitutions must be a non-null array',
+              payload: { manifest },
+            };
+            await deps.auditLogger.log(audit);
+            deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_schema_invalid', resolution: 'Provide a deviationManifest with required substitutions array (each item: original, replacement, reason)', detail: 'substitutions must be a non-null array' }));
+            return { exitCode: 2, audit };
+          }
           const valid = validateManifest(manifest);
 
           if (!valid) {
@@ -96,8 +110,8 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
               payload: { manifest },
             };
             await deps.auditLogger.log(audit);
-            deps.stderrWrite('H2 BLOCK: deviationManifest schema invalid');
-            return { exitCode: 1, audit };
+            deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_schema_invalid', resolution: 'Provide a deviationManifest with required substitutions array (each item: original, replacement, reason)', detail: ajv.errorsText(validateManifest.errors) }));
+            return { exitCode: 2, audit };
           }
 
           const audit: AuditLogEntry = {
@@ -126,8 +140,8 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
           payload: { error: detail },
         };
         await deps.auditLogger.log(audit);
-        deps.stderrWrite('H2 BLOCK: deviationManifest parse failed');
-        return { exitCode: 1, audit };
+        deps.stderrWrite(JSON.stringify({ rule: 'h2_manifest_parse_failed', resolution: 'Ensure deviationManifest value is valid JSON', detail }));
+        return { exitCode: 2, audit };
       }
     }
 
@@ -153,8 +167,8 @@ export async function handleImpl(deps: HandleDeps): Promise<HandleResult> {
       payload: { error: detail },
     };
     await deps.auditLogger.log(audit);
-    deps.stderrWrite(`H2 HALT: ${detail}`);
-    return { exitCode: 1, audit };
+    deps.stderrWrite(JSON.stringify({ rule: 'h2_handler_error', resolution: 'Check stdin is valid and hook is correctly configured', detail }));
+    return { exitCode: 2, audit };
   }
 }
 
@@ -185,6 +199,6 @@ export async function handle(): Promise<void> {
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   handle().catch((err) => {
     console.error('H2 uncaught error:', err);
-    process.exit(1);
+    process.exit(2);
   });
 }

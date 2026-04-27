@@ -57,7 +57,7 @@ describe('H5 Gate Result Hook (FR-011)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 
@@ -73,9 +73,9 @@ describe('H5 Gate Result Hook (FR-011)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
-    expect(stderrOutput).toContain('H5 BLOCK: Could not parse gate result');
+    expect(stderrOutput).toEqual(expect.arrayContaining([expect.stringContaining('h5_parse_error')]));
   });
 
   it('block when schema invalid (missing converged)', async () => {
@@ -95,9 +95,9 @@ describe('H5 Gate Result Hook (FR-011)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
-    expect(stderrOutput).toContain('H5 BLOCK: Gate result schema invalid');
+    expect(stderrOutput).toEqual(expect.arrayContaining([expect.stringContaining('h5_schema_invalid')]));
   });
 
   it('block when schema invalid (missing findings)', async () => {
@@ -117,7 +117,7 @@ describe('H5 Gate Result Hook (FR-011)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 
@@ -141,7 +141,7 @@ describe('H5 Gate Result Hook (FR-011)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
   });
 
@@ -246,7 +246,7 @@ describe('H5 Gate Result Hook (FR-011)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
   });
 
@@ -342,11 +342,11 @@ describe('H5 Gate Result Hook (FR-011)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('halt');
     expect(auditLogged).toBe(true);
     expect(auditDetail).toContain('H5 handler error');
     expect(stderrOutput.length).toBeGreaterThan(0);
-    expect(stderrOutput[0]).toContain('H5 HALT:');
+    expect(stderrOutput[0]).toContain('h5_handler_error');
   });
 });

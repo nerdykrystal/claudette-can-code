@@ -45,10 +45,10 @@ describe('H2 — deviationManifest parse-failure block path (was istanbul-ignore
       stderrWrite: (m) => stderr.push(m),
     });
 
-    expect(result.exitCode).toBe(1);
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
     expect(result.audit.rationale).toMatch(/^deviationManifest parse failed: /);
-    expect(stderr).toEqual(['H2 BLOCK: deviationManifest parse failed']);
+    expect(stderr).toEqual(expect.arrayContaining([expect.stringContaining('h2_manifest_parse_failed')]));
     // Audit payload includes the underlying error detail as a string.
     const auditPayload = result.audit.payload as { error: string };
     expect(typeof auditPayload.error).toBe('string');

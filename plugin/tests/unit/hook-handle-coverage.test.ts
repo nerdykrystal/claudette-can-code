@@ -62,8 +62,8 @@ describe('Hook handle() function bodies — in-process coverage', () => {
       'utf-8',
     );
     const { handle } = await import('../../src/hooks/h1-input-manifest/index.js');
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
-    expect(exitCapture).toBe(1);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
+    expect(exitCapture).toBe(2);
   });
 
   it('H2 handle() reads stdin, runs handleImpl, and calls process.exit with allow code', async () => {
