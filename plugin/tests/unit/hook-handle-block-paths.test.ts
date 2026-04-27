@@ -119,32 +119,39 @@ describe('Hook handle() block paths — inner arrow invocation + default branche
   });
 
   it('H4 handle() block path on model mismatch (emit + stderrWrite invoked)', async () => {
-    await writeFile(
-      join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json'),
-      JSON.stringify({ stages: [{ id: 's0', assignedModel: 'haiku-4-5' }] }),
-      'utf-8',
-    );
+    // Stage 08a: write plan-state + HMAC sidecar via PlanStateStore.write() so HMAC
+    // verification passes and the mismatch path is exercised (not the hmac_missing path).
+    const { PlanStateStore } = await import('../../src/core/plan-state/index.js');
+    const planStatePath = join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json');
+    const hmacKeyPath = join(claudeRoot, 'plugins', 'cdcc', 'hmac.key');
+    const store = new PlanStateStore({ jsonPath: planStatePath, hmacKeyPath });
+    await store.write({ stages: [{ id: 's0', assignedModel: 'haiku-4-5' }] } as never);
     // executingModel='opus-4-7' ≠ assignedModel='haiku-4-5' → block + redirect emit.
+    // Stage 08a: model mismatch is fail-closed → exit 2
     pipeFakeStdin('{"tool":"Write","args":{"path":"a.ts"},"executingModel":"opus-4-7"}');
     const { handle } = await import('../../src/hooks/h4-model-assignment/index.js');
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
-    expect(exitCapture).toBe(1);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
+    expect(exitCapture).toBe(2);
   });
 
-  it('H4 handle() allow path: no current stage (currentStageId ?? null branch)', async () => {
-    await writeFile(
-      join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json'),
-      // Empty stages: currentStageId = undefined, currentStage = undefined → allow path at 80.
-      JSON.stringify({ stages: [] }),
-      'utf-8',
-    );
+  it('H4 handle() block path: no current stage — fail-closed exit 2 (stage-08a)', async () => {
+    // Stage 08a: write plan-state + HMAC sidecar so HMAC passes; then empty stages triggers
+    // stage-not-found fail-closed path (exit 2).
+    const { PlanStateStore } = await import('../../src/core/plan-state/index.js');
+    const planStatePath = join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json');
+    const hmacKeyPath = join(claudeRoot, 'plugins', 'cdcc', 'hmac.key');
+    const store = new PlanStateStore({ jsonPath: planStatePath, hmacKeyPath });
+    // Empty stages: currentStageId = undefined, currentStage = undefined → fail-closed exit 2.
+    await store.write({ stages: [] } as never);
     pipeFakeStdin('{"tool":"Write","args":{},"executingModel":"opus-4-7"}');
     const { handle } = await import('../../src/hooks/h4-model-assignment/index.js');
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:0/);
-    expect(exitCapture).toBe(0);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
+    expect(exitCapture).toBe(2);
   });
 
-  it('H4 handle() halt path with malformed plan-state (catch at 124 + stderrWrite at 141)', async () => {
+  it('H4 handle() block path with malformed plan-state — exit 2 (stage-08a fail-closed)', async () => {
+    // Stage 08a: malformed plan-state is now fail-closed (exit 2) not halt (exit 1).
+    // PlanStateStore.read() returns malformed_json → structured stderr + exit 2.
     await writeFile(
       join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json'),
       'this is not json {{{',
@@ -152,8 +159,8 @@ describe('Hook handle() block paths — inner arrow invocation + default branche
     );
     pipeFakeStdin('{"tool":"Write","args":{},"executingModel":"opus-4-7"}');
     const { handle } = await import('../../src/hooks/h4-model-assignment/index.js');
-    await expect(handle()).rejects.toThrow(/__test_exit_stub__:1/);
-    expect(exitCapture).toBe(1);
+    await expect(handle()).rejects.toThrow(/__test_exit_stub__:2/);
+    expect(exitCapture).toBe(2);
   });
 
   it('H5 handle() block path on non-converged gate result', async () => {

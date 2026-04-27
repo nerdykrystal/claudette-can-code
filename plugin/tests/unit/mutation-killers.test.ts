@@ -325,10 +325,11 @@ describe('H4 mutation killers — exact rationales + emit shape', () => {
   it('mismatch block rationale matches "Model mismatch:" pattern with both models', async () => {
     let emittedDirective: unknown = null;
     const result = await h4Impl({
-      readFile: async () =>
-        JSON.stringify({
-          stages: [{ id: 's0', assignedModel: 'haiku-4-5' }],
-        }),
+      readFile: async () => '{}',
+      planStateReader: () => ({
+        ok: true as const,
+        value: { stages: [{ id: 's0', assignedModel: 'haiku-4-5' }] } as never,
+      }),
       stdinReader: async () =>
         '{"tool":"Write","args":{"path":"a"},"executingModel":"opus-4-7"}',
       auditLogger: noopLogger(),
@@ -343,7 +344,8 @@ describe('H4 mutation killers — exact rationales + emit shape', () => {
       },
       planStatePath: '/fake',
     });
-    expect(result.exitCode).toBe(1);
+    // Stage 08a: model mismatch is fail-closed → exit 2
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
     expect(result.audit.rationale).toMatch(/^Model mismatch: executing opus-4-7 but assigned haiku-4-5$/);
     expect(emittedDirective).toBeTruthy();
@@ -355,8 +357,11 @@ describe('H4 mutation killers — exact rationales + emit shape', () => {
 
   it('match allow rationale starts with "Executing model matches assigned model:"', async () => {
     const result = await h4Impl({
-      readFile: async () =>
-        JSON.stringify({ stages: [{ id: 's0', assignedModel: 'haiku-4-5' }] }),
+      readFile: async () => '{}',
+      planStateReader: () => ({
+        ok: true as const,
+        value: { stages: [{ id: 's0', assignedModel: 'haiku-4-5' }] } as never,
+      }),
       stdinReader: async () =>
         '{"tool":"Write","args":{},"executingModel":"haiku-4-5"}',
       auditLogger: noopLogger(),
@@ -375,9 +380,14 @@ describe('H4 mutation killers — exact rationales + emit shape', () => {
     expect(result.audit.rationale).toBe('Executing model matches assigned model: haiku-4-5');
   });
 
-  it('no-current-stage allow rationale is exactly "No current stage found; allow"', async () => {
+  it('no-current-stage block rationale is exactly "No current stage found; fail-closed"', async () => {
+    // Stage 08a: stage-not-found is now fail-closed (exit 2, closes gate-22 C-3)
     const result = await h4Impl({
-      readFile: async () => JSON.stringify({ stages: [] }),
+      readFile: async () => '{}',
+      planStateReader: () => ({
+        ok: true as const,
+        value: { stages: [] } as never,
+      }),
       stdinReader: async () =>
         '{"tool":"Write","args":{},"executingModel":"haiku-4-5"}',
       auditLogger: noopLogger(),
@@ -392,8 +402,8 @@ describe('H4 mutation killers — exact rationales + emit shape', () => {
       },
       planStatePath: '/fake',
     });
-    expect(result.exitCode).toBe(0);
-    expect(result.audit.rationale).toBe('No current stage found; allow');
+    expect(result.exitCode).toBe(2);
+    expect(result.audit.rationale).toBe('No current stage found; fail-closed');
   });
 });
 

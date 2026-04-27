@@ -80,11 +80,13 @@ describe('Hook handle() function bodies — in-process coverage', () => {
   });
 
   it('H4 handle() reads stdin + plan-state (exercises readFileWrapper body)', async () => {
-    await writeFile(
-      join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json'),
-      JSON.stringify({ stages: [{ id: 's0', assignedModel: 'opus-4-7' }] }),
-      'utf-8',
-    );
+    // Stage 08a: H4 now uses PlanStateStore.read() (HMAC-aware) for plan-state reads.
+    // Write plan-state + HMAC sidecar via PlanStateStore.write() so HMAC verification passes.
+    const { PlanStateStore } = await import('../../src/core/plan-state/index.js');
+    const planStatePath = join(claudeRoot, 'plugins', 'cdcc', 'plan-state.json');
+    const hmacKeyPath = join(claudeRoot, 'plugins', 'cdcc', 'hmac.key');
+    const store = new PlanStateStore({ jsonPath: planStatePath, hmacKeyPath });
+    await store.write({ stages: [{ id: 's0', assignedModel: 'opus-4-7' }] } as never);
     pipeFakeStdin('{"tool":"Write","args":{"path":"a"},"executingModel":"opus-4-7"}');
     const { handle } = await import('../../src/hooks/h4-model-assignment/index.js');
     await expect(handle()).rejects.toThrow(/__test_exit_stub__:0/);

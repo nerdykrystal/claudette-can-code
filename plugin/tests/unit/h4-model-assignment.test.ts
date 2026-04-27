@@ -2,6 +2,11 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { handleImpl, type HandleDeps } from '../../src/hooks/h4-model-assignment/index.js';
 import { AuditLogger } from '../../src/core/audit/index.js';
 
+/** Helper: inject a successful plan-state parse result without touching the filesystem. */
+function makePlanStateReader(planState: object): () => { ok: true; value: typeof planState } {
+  return () => ({ ok: true as const, value: planState as never });
+}
+
 describe('H4 Model Assignment Hook (FR-010)', () => {
   let stderrOutput: string[] = [];
   let mockAuditLogger: AuditLogger;
@@ -44,7 +49,8 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
 
   it('allow when executingModel matches assignedModel', async () => {
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({
+      readFile: async () => '{}',
+      planStateReader: makePlanStateReader({
         currentStageId: 'stage-1',
         stages: [{ id: 'stage-1', assignedModel: 'claude-haiku' }],
       }),
@@ -74,7 +80,8 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
 
   it('block and emit directive on model mismatch', async () => {
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({
+      readFile: async () => '{}',
+      planStateReader: makePlanStateReader({
         currentStageId: 'stage-1',
         stages: [{ id: 'stage-1', assignedModel: 'claude-opus' }],
       }),
@@ -97,14 +104,16 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
+    // Stage 08a: model mismatch is fail-closed → exit 2
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
     expect(emitCalled).toBe(true);
   });
 
-  it('allow when no current stage found', async () => {
+  it('block when no current stage found (fail-closed per stage-08a)', async () => {
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({
+      readFile: async () => '{}',
+      planStateReader: makePlanStateReader({
         currentStageId: 'nonexistent',
         stages: [{ id: 'stage-1', assignedModel: 'claude-opus' }],
       }),
@@ -126,13 +135,14 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(0);
-    expect(result.audit.decision).toBe('allow');
+    // Stage 08a: stage-not-found is now fail-closed (closes gate-22 C-3)
+    expect(result.exitCode).toBe(2);
+    expect(result.audit.decision).toBe('block');
   });
 
   it('halt on malformed stdin', async () => {
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({ stages: [] }),
+      readFile: async () => '{}',
       stdinReader: async () => 'invalid json {',
       auditLogger: mockAuditLogger,
       emit: () => {
@@ -151,9 +161,15 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
     expect(result.audit.decision).toBe('halt');
   });
 
-  it('halt on malformed plan state', async () => {
+  it('block on plan state not found (stage-08a: exit 2 fail-closed)', async () => {
+    // Stage 08a: plan-state missing is now fail-closed (exit 2, block) not halt.
+    // planStateReader returns not_found → structured stderr + exit 2.
     const deps: HandleDeps = {
-      readFile: async () => 'invalid json {',
+      readFile: async () => '{}',
+      planStateReader: () => ({
+        ok: false,
+        error: { kind: 'not_found' as const, path: '/fake/plan-state.json', message: 'plan-state.json not found at /fake/plan-state.json' },
+      }),
       stdinReader: async () => JSON.stringify({
         tool: 'Write',
         executingModel: 'model-a',
@@ -171,17 +187,18 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
 
     const result = await handleImpl(deps);
 
-    expect(result.exitCode).toBe(1);
-    expect(result.audit.decision).toBe('halt');
+    expect(result.exitCode).toBe(2);
+    expect(result.audit.decision).toBe('block');
+    expect(stderrOutput.length).toBeGreaterThan(0);
+    const parsed = JSON.parse(stderrOutput[0]) as { rule: string };
+    expect(parsed.rule).toBe('h4_plan_state_missing');
   });
 
   it('audit on allow path', async () => {
     let auditLogged = false;
 
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({
-        stages: [{ id: 'stage-1', assignedModel: 'model-a' }],
-      }),
+      readFile: async () => '{}',
       stdinReader: async () => JSON.stringify({
         tool: 'Read',
       }),
@@ -211,7 +228,8 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
     let auditLogged = false;
 
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({
+      readFile: async () => '{}',
+      planStateReader: makePlanStateReader({
         currentStageId: 'stage-1',
         stages: [{ id: 'stage-1', assignedModel: 'claude-opus' }],
       }),
@@ -245,7 +263,8 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
 
   it('include executingModel and assignedModel in payload', async () => {
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({
+      readFile: async () => '{}',
+      planStateReader: makePlanStateReader({
         currentStageId: 'stage-1',
         stages: [{ id: 'stage-1', assignedModel: 'opus' }],
       }),
@@ -273,7 +292,8 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
 
   it('use first stage when currentStageId not set', async () => {
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({
+      readFile: async () => '{}',
+      planStateReader: makePlanStateReader({
         stages: [{ id: 'first-stage', assignedModel: 'model-a' }],
       }),
       stdinReader: async () => JSON.stringify({
@@ -297,15 +317,13 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
     expect(result.audit.stage).toBe('first-stage');
   });
 
-  it('error handling on outer exception with audit log and stderr (lines 145-147)', async () => {
+  it('error handling on outer exception with audit log and stderr (halt path)', async () => {
+    // Throws from stdinReader to exercise the outer catch block (halt path).
     const deps: HandleDeps = {
-      readFile: async () => {
-        throw new Error('readFile failed');
+      readFile: async () => '{}',
+      stdinReader: async () => {
+        throw new Error('stdinReader failed');
       },
-      stdinReader: async () => JSON.stringify({
-        tool: 'Write',
-        executingModel: 'model-a',
-      }),
       auditLogger: mockAuditLogger,
       emit: () => {
         // Mock
@@ -325,9 +343,10 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
     expect(stderrOutput[0]).toContain('H4 HALT:');
   });
 
-  it('handle missing executingModel field in payload (lines 171-175)', async () => {
+  it('handle missing executingModel field in payload (mismatch path)', async () => {
     const deps: HandleDeps = {
-      readFile: async () => JSON.stringify({
+      readFile: async () => '{}',
+      planStateReader: makePlanStateReader({
         currentStageId: 'stage-1',
         stages: [{ id: 'stage-1', assignedModel: 'model-a' }],
       }),
@@ -349,16 +368,14 @@ describe('H4 Model Assignment Hook (FR-010)', () => {
 
     const result = await handleImpl(deps);
 
-    // When executingModel is undefined, the comparison at line 89 fails (undefined !== 'model-a')
-    // This triggers the mismatch block at lines 102-121
-    // Line 106 uses the ?? operator to set 'unknown' in the blocked object,
-    // but line 118 puts the original executingModel (undefined) in the audit payload
-    expect(result.exitCode).toBe(1);
+    // When executingModel is undefined, the comparison fails (undefined !== 'model-a')
+    // This triggers the mismatch block path → exit 2 (fail-closed, stage-08a)
+    expect(result.exitCode).toBe(2);
     expect(result.audit.decision).toBe('block');
     expect(emitCalled).toBe(true);
-    // The audit payload uses the original executingModel variable (line 118), which is undefined
+    // The audit payload uses the original executingModel variable, which is undefined
     expect(result.audit.payload.executingModel).toBeUndefined();
-    // But the blocked object passed to redirect() uses 'unknown' (line 106)
+    // But the blocked object passed to redirect() uses 'unknown'
     expect(result.audit.payload.directive).toBeDefined();
   });
 });
