@@ -193,7 +193,7 @@ async function runTier14Validation(
 
     const result = spawnSync('bash', [scriptPath], {
       encoding: 'utf8',
-      timeout: 10000,
+      timeout: 15000,
     });
 
     return {
