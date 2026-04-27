@@ -341,4 +341,35 @@ Surprise #2 was "read-only → writable." The PlanStateStore class provides both
 
 ## Independent Rater Verification Round 2
 
-Pending: Opus parent will spawn real subagent rater per /asae SKILL.md Step 6 and append findings here. Round 1 self-substituted evaluation above follows the identical structural pattern established at gate-62 (inline-rater-gate-62-2026-04-27). Round 2 rater will be agentId from Agent tool spawn.
+**Subagent type:** general-purpose (Agent tool from Opus parent)
+**agentId:** a7fa27259438c1da6
+**Spawned:** 2026-04-27 from Opus parent post-commit (cdcc HEAD 37ce174)
+
+**Brief:** 8-item Stage 06 §3.06 checklist + skepticism focus on proper-lockfile real-vs-paper-thin install (closing M-stage05-lockfile-skip).
+
+**Round 2 rater per-item verification (faithful summary):**
+
+1. **proper-lockfile real install + use:** CONFIRMED. node_modules present; package.json declares ^4.1.2; `store.ts:9` imports it; `store.ts:151-154` calls `await lockfile(jsonPath, { retries: { retries: 5, minTimeout: 100, maxTimeout: 500 }, stale: 10000 })`. Real call site, real config matching §3.06 spec. **M-stage05-lockfile-skip CLOSED.**
+2. HMAC implementation: CONFIRMED. crypto.randomBytes(32); chmodSync 0o600 with documented Windows fallback to 0o666 acceptance; timingSafeEqual with length pre-check; sidecar pattern (jsonPath + '.hmac').
+3. Store read/write: CONFIRMED. read() returns Result + fail-closed on hmac_mismatch (store.ts:103-108). write() acquires lock, computes HMAC, atomic-writes via writeFileAtomic.sync, releases in finally. Async signature justified (proper-lockfile sync API doesn't support retries).
+4. H-6 closure: PARTIAL nuance, not blocking. write() exists + tested; no production src/ caller yet (only tests). Audit log transparent: "write() available for Stage 07+ CLI invocations." Honest framing of capability-level closure.
+5. Test suite: CONFIRMED 51/51 files / 443/443 tests / 0 failures.
+6. typecheck + lint: CONFIRMED both clean.
+7. Property-based tests: CONFIRMED. `tests/property/plan-state/hmac-properties.test.ts` exists with 2 fc.property blocks (round-trip + collision-resistance) at numRuns:200, plus integration test for concurrent writes via Promise.all.
+8. Pass blocks Tier 1b: CONFIRMED.
+
+**Round 2 rater skepticism findings:**
+- proper-lockfile install: REAL not paper-thin. M-stage05-lockfile-skip genuinely closed by real code.
+- Concurrent retry-backoff test: hmac-properties.test.ts:74-106 uses Promise.all against shared store; exercises contention against retry policy; both succeed. Real concurrency test (not sequential). Could be tightened with explicit timing assertion (LOW finding, not blocking).
+- Windows chmod disclosure: HONEST. Code comment at hmac.ts:45-48 documents Windows fallback to 0o666 acceptance.
+- Round 1 self-rating: not material — independent verification of all artifacts reproduces Round 1 claims.
+
+**Round 2 rater verdict:** **CONFIRMED**
+
+**Rationale:** All 8 checklist items pass independent verification. proper-lockfile is real install with real retry config matching spec. HMAC primitives correct (timingSafeEqual, randomBytes, 0o600 documented). H-6 closure capability-level + transparent. Tests/typecheck/lint clean. M-stage05-lockfile-skip CLOSED.
+
+## Final Gate Disposition (Round 2)
+
+**STRICT-3 PASS** — Stage 06 plan-state store + HMAC + proper-lockfile complete; H-6 capability-closed; M-stage05-lockfile-skip CLOSED. Sub-agent + Round 1 self-rater + Round 2 real rater (a7fa27259438c1da6) + Opus parent agreement. 443/443 tests green. proper-lockfile carry-forward concern from gate-62 fully resolved.
+
+Note: Opus parent moved gate-63 from `plugin/deprecated/asae-logs/` to repo-root `deprecated/asae-logs/` post-commit (canonical path). Original commit at 37ce174 had wrong path; this amendment includes the move.
