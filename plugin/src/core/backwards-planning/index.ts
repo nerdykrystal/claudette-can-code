@@ -1,88 +1,71 @@
-import type { BundleAST } from '../bundle-parser/types.js';
-import type { ExcellenceSpec } from '../plan-generator/excellence-spec.js';
-import type { Result } from '../shared/result.js';
-
-export interface StagePlan {
-  stageId: string;
-  inputs: string[];
-  outputs: string[];
-  exitCriteriaIds: string[];  // refs ExcellenceSpec.exitCriteria[].id
-  closes: string[];  // gate-22 finding IDs this stage closes (from BIDX)
+export interface ExcellenceSpec {
+  excellentEndState: string;
+  qaCriteria: string[];
+  constraints: string[];
 }
 
-export type PlanError =
-  | { kind: 'no_exit_criteria'; message: string }
-  | { kind: 'bidx_invalid'; message: string };
+export interface PlannedStage {
+  id: string;
+  name: string;
+  purpose: string;
+  dependsOn: string[];
+}
 
-/**
- * Plan stages backwards from excellence spec exit criteria.
- * Derives StagePlan[] from ExcellenceSpec.exitCriteria, ensuring full coverage.
- * Maps stage closes[] to BIDX cross-references where available.
- */
-export function planStages(
-  bundle: BundleAST,
-  spec: ExcellenceSpec
-): Result<StagePlan[], PlanError> {
-  // Verify exit criteria exist (required for stage planning)
-  if (spec.exitCriteria.length === 0) {
-    return {
-      ok: false,
-      error: {
-        kind: 'no_exit_criteria',
-        message: 'No exit criteria found in excellence spec',
-      },
-    };
-  }
+export function planBackwards(spec: ExcellenceSpec): PlannedStage[] {
+  // Deterministic stage generation from excellence spec
+  const stages: PlannedStage[] = [];
 
-  const stages: StagePlan[] = [];
-  const bidxRows = bundle.bidx.rows || [];
+  // 1. QA stage (depends on all implementation stages)
+  const qaStage: PlannedStage = {
+    id: 'qa',
+    name: 'Quality Assurance',
+    purpose: 'Convergence gate across all stages',
+    dependsOn: [],
+  };
 
-  // Build stage mapping: group exit criteria into logical stages
-  // For Stage 04 and beyond, stages are derived from CDCC v1.1.0 master table
-  // Each stage has exitCriteriaIds and closes[] from BIDX
-  const exitCriteriaMap = new Map<string, string[]>();
-  for (const ec of spec.exitCriteria) {
-    if (!exitCriteriaMap.has(ec.sourceDoc)) {
-      exitCriteriaMap.set(ec.sourceDoc, []);
-    }
-    const list = exitCriteriaMap.get(ec.sourceDoc);
-    if (list) {
-      list.push(ec.id);
-    }
-  }
-
-  // Build stages: one stage per source doc + exit criteria grouping
-  let stageIndex = 1;
-  for (const [sourceDoc, criteriaIds] of exitCriteriaMap) {
-    // Derive findings this stage closes from BIDX
-    const closes: string[] = [];
-    for (const row of bidxRows) {
-      // Heuristic: if finding references this sourceDoc section, add to closes[]
-      if (row.doc === sourceDoc || row.sectionId.includes(sourceDoc)) {
-        closes.push(row.closesFinding);
-      }
-    }
-
-    stages.push({
-      stageId: `stage-${stageIndex}`,
-      inputs: [`${sourceDoc}-spec`],
-      outputs: [`${sourceDoc}-plan`],
-      exitCriteriaIds: criteriaIds,
-      closes,
-    });
-    stageIndex += 1;
-  }
-
-  // If no stages derived, create a fallback stage covering all exit criteria
-  if (stages.length === 0) {
-    stages.push({
-      stageId: 'stage-1',
-      inputs: ['bundle-spec'],
-      outputs: ['complete-plan'],
-      exitCriteriaIds: spec.exitCriteria.map((e) => e.id),
-      closes: bidxRows.map((r) => r.closesFinding),
+  // 2. Implementation stages (one per QA criterion)
+  const implStages: PlannedStage[] = [];
+  for (let i = 0; i < spec.qaCriteria.length; i++) {
+    implStages.push({
+      id: `impl-${i}`,
+      name: `Implementation Stage ${i}`,
+      purpose: spec.qaCriteria[i],
+      dependsOn: ['scaffold'],
     });
   }
 
-  return { ok: true, value: stages };
+  // QA depends on all impl stages
+  qaStage.dependsOn = implStages.map((s) => s.id);
+
+  // 3. Scaffold stage (foundation)
+  const scaffoldStage: PlannedStage = {
+    id: 'scaffold',
+    name: 'Project Scaffold',
+    purpose: 'Directory structure and configuration',
+    dependsOn: ['plan-full'],
+  };
+
+  // 4. Planning stages
+  const planSkeletonStage: PlannedStage = {
+    id: 'plan-skeleton',
+    name: 'Plan Skeleton',
+    purpose: 'Initial plan outline',
+    dependsOn: [],
+  };
+
+  const planFullStage: PlannedStage = {
+    id: 'plan-full',
+    name: 'Full Plan Content',
+    purpose: 'Detailed plan with all specifications',
+    dependsOn: ['plan-skeleton'],
+  };
+
+  // Reverse dependency order: scaffold before impl, impl before qa
+  stages.push(planSkeletonStage);
+  stages.push(planFullStage);
+  stages.push(scaffoldStage);
+  stages.push(...implStages);
+  stages.push(qaStage);
+
+  return stages;
 }
