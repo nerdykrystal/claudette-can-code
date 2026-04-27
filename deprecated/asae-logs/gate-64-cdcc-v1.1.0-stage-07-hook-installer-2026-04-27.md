@@ -369,4 +369,34 @@ write-file-atomic (POSIX-strong) is the primary implementation. Native helper de
 - `_doInstallAllHooks()` inner function complexity was not independently measured; it contains the inner loop and write logic. If it exceeds 15 it would be a lint error, but lint passed per implementation claim. Taken at face value.
 - Windows EPERM mitigation (write-file-atomic) is accepted; POSIX-strong claim is well-documented upstream.
 
-**Rater agentId:** inline-rater-gate-64-2026-04-27 (self-contained cold-context evaluation; no Agent tool available in this environment; identical structural pattern to gate-63 Round 1 inline rater)
+**Rater agentId (Round 1 self-substituted):** inline-rater-gate-64-2026-04-27
+
+---
+
+## Independent Rater Verification (Round 2 — Real Subagent From Opus Parent)
+
+**Subagent type:** general-purpose (Agent tool from Opus parent)
+**agentId:** a3aceebc8b0eaee57
+**Spawned:** 2026-04-27 from Opus parent post-commit (cdcc HEAD e59b060)
+
+**Round 2 verdict:** **CONFIRMED**
+
+**Round 2 per-item verification (faithful summary):**
+
+1. H-3 systemic closure (Insight B): CONFIRMED. cli/index.ts diff shows literal hookEntries H1-H5 array REAL DELETION (not rename). Replaced with `coreModules.installAllHooks(...)`. Grep confirms 0 hardcoded hook IDs.
+2. plugin.json runtime read: CONFIRMED. plugin-json-reader.ts (104 LOC) does real readFileSync + JSON.parse + extracts hooks.entries with typed Result errors. installAllHooks calls it Step 1.
+3. atomic-write wrapper: CONFIRMED. Imports + awaits write-file-atomic. AtomicWriteError discriminated union. AC-21 deferral documented in JSDoc + audit log disclosures (severity LOW; defer_to v1.2.0; traceback to Stage 00 Finding 3 + Insight C). Honest, not hand-waved.
+4. proper-lockfile usage: CONFIRMED. import + acquireLock helper + retries config matching Stage 06 pattern. Called from both installHooks (legacy) and installAllHooks with finally release.
+5. Test suite green: CONFIRMED 53/53 files / 457/457 tests / 0 failures.
+6. Tier 1b compliant: CONFIRMED. Stage 07 closes H-1, H-3, M-3, M-11. Insight B systemic — any future Hn auto-installs.
+
+**Round 2 rater honest gaps (LOW; non-blocking):**
+- Global coverage thresholds RED (carried from gate-57+; not Stage 07 introduced).
+- Windows kill-mid-write integration test deferred with AC-21 (correctly scoped — needs native helper to test).
+- Sub-agent Round 1 self-rated; Round 2 independent verification corroborates.
+
+**Round 2 rationale:** All 4 high-stakes claims (hardcoded array deletion + runtime read real + atomic-write wrapping write-file-atomic + proper-lockfile used) verified by direct file inspection. Tests independently re-run green. AC-21 deferral documented with explicit rationale + severity + defer-to + traceback. Not hand-waved. Stage 07 PASS sustained.
+
+## Final Gate Disposition (Round 2)
+
+**STRICT-3 PASS** — Stage 07 hook installer + plugin.json single SoT + atomic-write TS-only complete; H-1/H-3/M-3/M-11 functionally closed; Insight B systemic closure (CLI install list deletion); AC-21 native helper formally deferred to v1.2.0 with documented rationale. 457/457 tests green. proper-lockfile pattern continues from Stage 06.
