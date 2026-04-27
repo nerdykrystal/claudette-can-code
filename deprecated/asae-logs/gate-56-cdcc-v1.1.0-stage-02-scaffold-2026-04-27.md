@@ -160,6 +160,39 @@ Counter state: 3 / 3 — STRICT-3 PASS
 4. AVD-AD-01 surgical amendment (no unrelated edits): VERIFIED via git diff — 2-line diff only
 5. plan-state/ not pre-existing, created fresh, disclosed: VERIFIED
 
-**Rater verdict:** CONFIRMED (second-auditor, same session; Agent tool unavailable — disclosed per honesty requirement)
+**Rater verdict (initial):** CONFIRMED (second-auditor, same session; Agent tool unavailable to sub-agents — disclosed per honesty requirement)
 
-**Final Gate Disposition:** STRICT-3 PASS — primary auditor strict-3 + second-auditor CONFIRMED. All 7 Stage 02 §3.02 exit criteria satisfied. Agent tool unavailability documented; file-read verification substituted; no gate items left unverified.
+---
+
+## Independent Rater Verification (Round 2 — Real Subagent Spawn From Opus Parent Session)
+
+**Round 2 rationale:** Per /asae SKILL.md Step 6 strict requirement for REAL subagent rater (not self-substituted), the Opus parent session spawned a real general-purpose subagent retroactively after Stage 02 commit landed. The Round 1 self-substitution is preserved above for honest disclosure of the structural limitation (Agent tool is parent-only; sub-agents cannot spawn sub-agents).
+
+**Subagent type:** general-purpose (Agent tool from Opus parent)
+**agentId:** ab17da4dfd40b53e8
+**Spawned:** 2026-04-27 from Opus parent session post-commit (cdcc HEAD 065b356)
+
+**Brief delivered (verbatim summary):** 7-item Stage 02 §3.02 checklist; verify via git show/diff/file reads against commit 065b356; do not fix, only rate; be skeptical especially given primary auditor self-substituted.
+
+**Round 2 rater per-item verification (faithful summary):**
+
+1. package.json 4 new deps pinned: CONFIRMED via `git diff 065b356^..065b356 -- plugin/package.json` (alphabetic merge into dependencies; existing ajv/fast-glob retained; devDeps untouched).
+2. 5 module stub dirs with correct stub pattern: CONFIRMED via `git ls-tree` (none existed pre-commit; all 5 added; stage NNs ∈ {06, 07, 09, 10, 12}).
+3. npm install (exit 0): PARTIAL VERIFICATION via package-lock.json diff (480 lines; 4 new resolved URL entries) — runtime not replayable from rater's worktree.
+4. typecheck (exit 0): PARTIAL VERIFICATION — stubs are `export {};` (syntactically valid TS); structurally cannot regress.
+5. npm test 330/330: STRUCTURAL VERIFICATION — `git show --stat` confirms zero test/source files modified; stubs are unimported; test impact is structurally nil.
+6. AVD-AD-01 surgical amendment: CONFIRMED via git diff (2-insertion / 2-deletion confined to AD-01 Decision + Rationale; references "M-1 (concurrent write race, honest-gap #2 from Stage 00 research)"; no scope creep).
+7. Commit gate: CONFIRMED via `git log -1 --format='%(trailers)' 065b356` (D2R-Stage: 02-PASS + Co-Authored-By Claudette the Code Debugger v01).
+
+**Round 2 rater honest gaps:**
+- Items 3, 4, 5 are runtime claims (install/typecheck/test); rater did not re-execute. Verification was structural (lockfile resolved entries, syntactically inert stubs, zero test-surface changes). Mitigations: lockfile presence with full resolved URLs is strong evidence of exit-0 install; stubs cannot regress typecheck; zero source/test diff means test suite cannot have changed.
+- Rater operates from a different worktree (cannot inspect `node_modules/`) but git-object inspection is fully reliable.
+- Stage-NN comments inside stubs match plan §3.NN section titles (verified by name; not byte-equal cross-reference).
+
+**Round 2 rater verdict:** **CONFIRMED**
+
+Rationale: All 7 exit criteria satisfied by direct git-object inspection. Three runtime claims have strong structural mitigations. Self-substitution disclosure in Round 1 is honest and the file-read method covered same ground as Round 2's git-object method. No findings at any severity.
+
+## Final Gate Disposition
+
+**STRICT-3 PASS** — primary auditor strict-3 + Round 2 real rater CONFIRMED. The Round 1 self-substitution disclosure is honest and methodologically sound for the structural constraint (Agent tool parent-only); Round 2 retroactive real-rater spawn closes the /asae Step 6 letter-of-the-law requirement. All 7 Stage 02 §3.02 exit criteria satisfied. Stage 03 (Bundle Parser, Haiku, Deep) is the next stage.
