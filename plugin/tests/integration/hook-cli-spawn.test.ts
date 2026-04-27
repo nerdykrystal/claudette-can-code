@@ -70,8 +70,8 @@ describe('Hook CLI entry points — spawn-based coverage', () => {
         env: { ...process.env, CLAUDE_ROOT: claudeRoot },
         encoding: 'utf-8',
       });
-      expect(res.status).toBe(1);
-      expect(res.stderr).toContain('H1 BLOCK');
+      expect(res.status).toBe(2);
+      expect(res.stderr).toContain('h1_no_input_manifest');
     });
 
     it('H2: CLI entry reads stdin, exits 0 on no BUILD_COMPLETE', async () => {
@@ -127,33 +127,33 @@ describe('Hook CLI entry points — spawn-based coverage', () => {
     // own try/catch converts every error into a HandleResult, so handle() never
     // rejects in practice. Those lines are documented as reachability-impossible
     // under the current architecture in workspace/deprecated/asae-logs/gate-09.
-    it('H1 with missing plan-state file exits 1 via handleImpl halt path', async () => {
+    it('H1 with missing plan-state file exits 2 via handleImpl halt path', async () => {
       const res = spawnSync('node', [hookDist('h1-input-manifest')], {
         env: { ...process.env, CLAUDE_ROOT: claudeRoot },
         encoding: 'utf-8',
       });
-      expect(res.status).toBe(1);
-      expect(res.stderr).toMatch(/H1 (HALT|BLOCK):/);
+      expect(res.status).toBe(2);
+      expect(res.stderr).toContain('h1_handler_error');
     });
 
-    it('H4 with missing plan-state file and Write tool exits 1 via handleImpl halt path', async () => {
+    it('H4 with missing plan-state file and Write tool exits 2 via handleImpl halt path', async () => {
       const res = spawnSync('node', [hookDist('h4-model-assignment')], {
         env: { ...process.env, CLAUDE_ROOT: claudeRoot },
         input: '{"tool":"Write","args":{},"executingModel":"opus-4-7"}',
         encoding: 'utf-8',
       });
-      expect(res.status).toBe(1);
-      expect(res.stderr).toMatch(/H4 (HALT|BLOCK):/);
+      expect(res.status).toBe(2);
+      expect(res.stderr).toContain('h4_plan_state_missing');
     });
 
-    it('H5 with malformed stdin exits 1 via block path', async () => {
+    it('H5 with malformed stdin exits 2 via block path', async () => {
       const res = spawnSync('node', [hookDist('h5-gate-result')], {
         env: { ...process.env, CLAUDE_ROOT: claudeRoot },
         input: 'not-json',
         encoding: 'utf-8',
       });
-      expect(res.status).toBe(1);
-      expect(res.stderr).toContain('H5 BLOCK');
+      expect(res.status).toBe(2);
+      expect(res.stderr).toContain('h5_parse_error');
     });
   });
 });
